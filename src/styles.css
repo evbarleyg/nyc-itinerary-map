@@ -1,0 +1,320 @@
+:root {
+  --bg: #f4f3ee;
+  --panel-bg: #fffdf8;
+  --text: #1f2933;
+  --muted: #5f6c76;
+  --border: #dfd7ca;
+  --shadow: 0 12px 30px rgba(28, 40, 54, 0.12);
+  --active-bg: #e9f2ee;
+  --button-bg: #264f73;
+  --button-text: #f7fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: "Avenir Next", "Segoe UI", Tahoma, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #f2efe6 0%, #f8f6f0 50%, #f0efe9 100%);
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 14px;
+  padding: 14px;
+}
+
+#itinerary-panel,
+#map-shell {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+#itinerary-panel {
+  background: var(--panel-bg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+#itinerary-panel h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  letter-spacing: 0.01em;
+}
+
+.weather-note {
+  margin: 10px 0 8px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.engine-badge {
+  margin: 0 0 12px;
+  display: inline-block;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #c7d6df;
+  background: #edf5f8;
+  color: #2d5871;
+  font-size: 0.82rem;
+}
+
+#itinerary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.itinerary-item {
+  width: 100%;
+  border: 1px solid #d7e1e8;
+  border-left: 7px solid var(--item-color, #9aa5af);
+  border-radius: 10px;
+  background: #fcfdff;
+  padding: 10px 10px 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease, border-color 150ms ease;
+}
+
+.itinerary-item:hover {
+  transform: translateY(-1px);
+  background: #f4f9ff;
+}
+
+.itinerary-item.active {
+  border-color: #9cb9ce;
+  background: var(--active-bg);
+}
+
+.itinerary-item .time {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #2f3c4a;
+  margin-bottom: 2px;
+}
+
+.itinerary-item .title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2a34;
+}
+
+.itinerary-item .meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.panel-actions {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+#download-btn {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--button-bg);
+  color: var(--button-text);
+  cursor: pointer;
+  width: 100%;
+}
+
+#download-btn:hover {
+  filter: brightness(1.06);
+}
+
+#download-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.status {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+#map-shell {
+  position: relative;
+  overflow: hidden;
+  background: #f7fafc;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
+#legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  max-width: min(460px, calc(100% - 24px));
+  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid #ddd4c8;
+  border-radius: 10px;
+  padding: 8px 10px;
+  backdrop-filter: blur(3px);
+}
+
+#legend .legend-title {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #394854;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0;
+  font-size: 0.78rem;
+  color: #33424e;
+}
+
+.legend-chip {
+  width: 18px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.leaflet-tooltip.waypoint-label {
+  border: 1px solid #bfd2c8;
+  background: #f3faf5;
+  color: #33584a;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.leaflet-popup-content {
+  margin: 10px 12px;
+  line-height: 1.35;
+  color: #1e2f3d;
+}
+
+.popup-title {
+  margin: 0 0 2px;
+  font-size: 0.93rem;
+  font-weight: 700;
+}
+
+.popup-time {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #3a566e;
+}
+
+.popup-address {
+  margin: 4px 0;
+  font-size: 0.8rem;
+  color: #4f6474;
+}
+
+.popup-note {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+}
+
+.mapboxgl-popup-content {
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.mb-stop-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 8px rgba(18, 32, 45, 0.35);
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.mb-stop-marker.is-active {
+  transform: scale(1.35);
+}
+
+.mb-stop-marker.is-dim {
+  opacity: 0.36;
+}
+
+.mb-waypoint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  transition: opacity 120ms ease;
+}
+
+.mb-waypoint .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid #2f5f4f;
+  background: #e9f7ef;
+}
+
+.mb-waypoint .label {
+  border: 1px solid #bfd2c8;
+  background: #f3faf5;
+  color: #33584a;
+  font-size: 0.72rem;
+  padding: 1px 5px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.mb-waypoint.is-active .label {
+  border-color: #89b4a0;
+}
+
+.mb-waypoint.is-dim {
+  opacity: 0.34;
+}
+
+@media (max-width: 980px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  #itinerary-panel {
+    max-height: 44vh;
+  }
+
+  #map-shell {
+    min-height: 56vh;
+  }
+}

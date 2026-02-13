@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NYC Itinerary Map</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside id="itinerary-panel">
+        <h1>NYC Day Itinerary</h1>
+        <p class="weather-note">
+          Cold but sunny day. Central Park route prioritizes scenic interior paths to reduce wind exposure.
+        </p>
+        <p id="engine-badge" class="engine-badge">Map engine: detecting...</p>
+        <ol id="itinerary-list" aria-label="Today itinerary"></ol>
+        <div class="panel-actions">
+          <button id="download-btn" type="button">Download Map (PNG)</button>
+          <p id="status" class="status">Loading map...</p>
+        </div>
+      </aside>
+
+      <main id="map-shell">
+        <div id="map" aria-label="NYC itinerary map"></div>
+        <section id="legend" aria-label="Route legend"></section>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
