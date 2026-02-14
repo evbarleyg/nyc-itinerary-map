@@ -8,7 +8,7 @@
     "dev": "vite",
     "lint": "node --check src/main.js && node --check src/itinerary.js",
     "test": "node --test",
-    "build": "vite build",
+    "build": "vite build && mkdir -p dist/saturday && cp saturday/index.html dist/saturday/index.html && cp saturday/README.md dist/saturday/README.md",
     "preview": "vite preview"
   },
   "dependencies": {
