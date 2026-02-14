@@ -34,6 +34,18 @@ If Mapbox fails to initialize, the app automatically falls back to Leaflet.
 2. Click `Download Map (PNG)` in the left panel.
 3. The app saves `nyc-itinerary-map-YYYY-MM-DD.png`.
 
+## One-Tap Directions
+
+Use `Open in Google Maps` in the left panel to launch the full multi-stop route.
+
+## Validate
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
 ## Coordinate sources
 
 - Primary: runtime geocoding via Mapbox Geocoding API (if token present) or Nominatim (OpenStreetMap)

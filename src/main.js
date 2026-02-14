@@ -3,114 +3,252 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import L from 'leaflet';
 import mapboxgl from 'mapbox-gl';
 import html2canvas from 'html2canvas';
+import {
+  FINAL_GOOGLE_MAPS_URL,
+  FINALIZED_ITINERARY_PATCH,
+  ITINERARY_DATE,
+  getGoogleMapsUrl,
+} from './itinerary.js';
 import './styles.css';
 
 const MAPBOX_TOKEN = (import.meta.env.MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
+const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
 
-const FIXED_STOPS = [
-  {
-    id: 'hotel',
-    name: 'Park Thompson Central Park',
-    time: 'Before 9:30',
-    address: '119 W 56th St, New York, NY',
-    note: 'Start point. Walk east to the southeast park entrance.',
-    markerColor: '#2f6c59',
-    fallback: [40.7643285, -73.978572],
-  },
-  {
-    id: 'ej',
-    name: "EJ's Luncheonette",
-    time: '10:30-11:30',
-    address: '1271 3rd Ave, New York, NY 10021',
-    note: 'Warm diner breakfast.',
-    markerColor: '#d98a3e',
-    fallback: [40.7704393, -73.9597626],
-  },
-  {
-    id: 'frick',
-    name: 'The Frick Collection',
-    time: '11:45-1:15',
-    address: '1 E 70th St, New York, NY 10021',
-    note: 'Frick: 60-90 min loop.',
-    markerColor: '#4e6fae',
-    fallback: [40.7712536, -73.9670961],
-  },
-  {
-    id: 'cisiamo',
-    name: 'Ci Siamo',
-    time: '2:00 lunch',
-    address: '440 W 33rd St, New York, NY 10001',
-    note: 'Lunch at Manhattan West.',
-    markerColor: '#2f5d8a',
-    fallback: [40.75331, -73.998415],
-  },
-];
-
-const STEP_CONFIG = [
-  {
-    id: 'step1',
-    time: '9:30-10:30',
-    title: 'Central Park scenic walk to UES',
-    meta: 'Hotel -> The Pond -> Mall -> Bethesda -> east exit -> EJ\'s',
-    color: '#3b7a57',
-  },
-  {
-    id: 'step2',
-    time: '10:30-11:30',
-    title: "Breakfast at EJ's Luncheonette",
-    meta: 'Upper East Side diner stop',
-    color: '#d98a3e',
-  },
-  {
-    id: 'step3',
-    time: '11:45-1:15',
-    title: 'The Frick Collection',
-    meta: 'Museum visit block',
-    color: '#4e6fae',
-  },
-  {
-    id: 'step4',
-    time: '2:00',
-    title: 'Transit/Ride to Ci Siamo',
-    meta: 'Not walking (subway/ride)',
-    color: '#2f5d8a',
-  },
-  {
-    id: 'step5',
-    time: '3:30-4:30',
-    title: 'High Line southbound walk',
-    meta: 'Hudson Yards area -> Chelsea/Meatpacking',
-    color: '#2b9aa0',
-  },
-  {
-    id: 'step6',
-    time: '5:00+',
-    title: 'Drinks zone (flexible)',
-    meta: 'Chelsea or Meatpacking',
-    color: '#b95f3c',
-  },
-];
-
-const STATIC_POINTS = {
-  highlineStart: {
-    id: 'highlineStart',
-    name: 'High Line access (Hudson Yards side)',
-    time: '3:30-4:30',
-    address: 'Near W 34th St & 12th Ave, New York, NY',
-    note: 'Enter around Hudson Yards and walk south.',
-    markerColor: '#2b9aa0',
-    coord: [40.75386, -74.00674],
-  },
-  highlineEnd: {
-    id: 'highlineEnd',
-    name: 'High Line south end (Meatpacking)',
-    time: '3:30-4:30',
-    address: 'Near Gansevoort St, New York, NY',
-    note: 'Southbound finish near Chelsea/Meatpacking.',
-    markerColor: '#2b9aa0',
-    coord: [40.73958, -74.00899],
-  },
+const DEFAULT_ITINERARY = {
+  weatherNote:
+    'Cold but sunny day. Central Park route prioritizes scenic interior paths to reduce wind exposure.',
+  steps: [
+    {
+      id: 'step1',
+      time: '9:30-10:30',
+      title: 'Central Park scenic walk to UES',
+      meta: "Hotel -> The Pond -> Mall -> Bethesda -> east exit -> EJ's",
+      color: '#3b7a57',
+    },
+    {
+      id: 'step2',
+      time: '10:30-11:30',
+      title: "Breakfast at EJ's Luncheonette",
+      meta: 'Upper East Side diner stop',
+      color: '#d98a3e',
+    },
+    {
+      id: 'step3',
+      time: '11:45-1:15',
+      title: 'The Frick Collection',
+      meta: 'Museum visit block',
+      color: '#4e6fae',
+    },
+    {
+      id: 'step4',
+      time: '2:00',
+      title: 'Transit/Ride to Ci Siamo',
+      meta: 'Not walking (subway/ride)',
+      color: '#2f5d8a',
+    },
+    {
+      id: 'step5',
+      time: '3:30-4:30',
+      title: 'High Line southbound walk',
+      meta: 'Hudson Yards area -> Chelsea/Meatpacking',
+      color: '#2b9aa0',
+    },
+    {
+      id: 'step6',
+      time: '5:00+',
+      title: 'Drinks zone (flexible)',
+      meta: 'Chelsea or Meatpacking',
+      color: '#b95f3c',
+    },
+  ],
+  stops: [
+    {
+      id: 'hotel',
+      name: 'Park Thompson Central Park',
+      time: 'Before 9:30',
+      address: '119 W 56th St, New York, NY',
+      note: 'Start point. Walk east to the southeast park entrance.',
+      markerColor: '#2f6c59',
+      fallback: [40.7643285, -73.978572],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'ej',
+      name: "EJ's Luncheonette",
+      time: '10:30-11:30',
+      address: '1271 3rd Ave, New York, NY 10021',
+      note: 'Warm diner breakfast.',
+      markerColor: '#d98a3e',
+      fallback: [40.7704393, -73.9597626],
+      stepIds: ['step1', 'step2', 'step3'],
+    },
+    {
+      id: 'frick',
+      name: 'The Frick Collection',
+      time: '11:45-1:15',
+      address: '1 E 70th St, New York, NY 10021',
+      note: 'Frick: 60-90 min loop.',
+      markerColor: '#4e6fae',
+      fallback: [40.7712536, -73.9670961],
+      stepIds: ['step3', 'step4'],
+    },
+    {
+      id: 'cisiamo',
+      name: 'Ci Siamo',
+      time: '2:00 lunch',
+      address: '440 W 33rd St, New York, NY 10001',
+      note: 'Lunch at Manhattan West.',
+      markerColor: '#2f5d8a',
+      fallback: [40.75331, -73.998415],
+      stepIds: ['step4'],
+    },
+  ],
+  staticPoints: [
+    {
+      id: 'highlineStart',
+      name: 'High Line access (Hudson Yards side)',
+      time: '3:30-4:30',
+      address: 'Near W 34th St & 12th Ave, New York, NY',
+      note: 'Enter around Hudson Yards and walk south.',
+      markerColor: '#2b9aa0',
+      coord: [40.75386, -74.00674],
+      stepIds: ['step5'],
+    },
+    {
+      id: 'highlineEnd',
+      name: 'High Line south end (Meatpacking)',
+      time: '3:30-4:30',
+      address: 'Near Gansevoort St, New York, NY',
+      note: 'Southbound finish near Chelsea/Meatpacking.',
+      markerColor: '#2b9aa0',
+      coord: [40.73958, -74.00899],
+      stepIds: ['step5'],
+    },
+  ],
+  parkWaypoints: [
+    {
+      id: 'cp-entrance',
+      label: 'Park Entrance',
+      note: 'Enter at Grand Army Plaza (near 59th St & 5th Ave).',
+      coord: [40.76459, -73.97361],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'cp-pond',
+      label: 'The Pond',
+      note: 'Sheltered water views just inside the southeast corner.',
+      coord: [40.76681, -73.97332],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'cp-mall',
+      label: 'The Mall',
+      note: 'Tree-lined promenade on Literary Walk.',
+      coord: [40.7714, -73.97383],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'cp-bethesda',
+      label: 'Bethesda Terrace',
+      note: 'Fountain and arcade; good scenic midpoint.',
+      coord: [40.77404, -73.97012],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'cp-bowbridge',
+      label: 'Bow Bridge',
+      note: 'Short optional scenic detour before heading east.',
+      coord: [40.77544, -73.97158],
+      stepIds: ['step1'],
+    },
+    {
+      id: 'cp-exit',
+      label: 'East Side Exit',
+      note: 'Exit around E 72nd St / 5th Ave to approach 3rd Ave efficiently.',
+      coord: [40.77274, -73.96615],
+      stepIds: ['step1'],
+    },
+  ],
+  routes: [
+    {
+      id: 'routeA',
+      name: 'Central Park interior walk',
+      time: '9:30-10:30',
+      note: "Scenic route via interior paths (Pond, Mall, Bethesda, Bow Bridge), then east exit to EJ's.",
+      stepIds: ['step1'],
+      color: '#3b7a57',
+      dashed: false,
+    },
+    {
+      id: 'routeB',
+      name: "Walk: EJ's to The Frick",
+      time: '11:30-11:45',
+      note: 'Short Upper East Side walk west toward Fifth Avenue.',
+      stepIds: ['step3'],
+      color: '#4e6fae',
+      dashed: false,
+    },
+    {
+      id: 'routeC',
+      name: 'Transit/Ride: Frick to Ci Siamo',
+      time: '1:15-2:00',
+      note: 'Recommended as subway/ride transfer (not walking).',
+      stepIds: ['step4'],
+      color: '#2f5d8a',
+      dashed: true,
+    },
+    {
+      id: 'routeD',
+      name: 'High Line southbound walk',
+      time: '3:30-4:30',
+      note: 'Reasonable southbound segment from Hudson Yards area into Meatpacking.',
+      stepIds: ['step5'],
+      color: '#2b9aa0',
+      dashed: false,
+    },
+  ],
+  zones: [
+    {
+      id: 'highLineZone',
+      name: 'High Line focus zone',
+      time: '3:30-4:30',
+      note: 'Flexible entry points near Hudson Yards; route continues south.',
+      stepIds: ['step5'],
+      color: '#2b9aa0',
+      coords: [
+        [40.75475, -74.0078],
+        [40.7541, -74.00385],
+        [40.74862, -74.00353],
+        [40.74332, -74.00538],
+        [40.73901, -74.00874],
+        [40.73902, -74.01124],
+        [40.74298, -74.00847],
+        [40.74833, -74.00625],
+      ],
+    },
+    {
+      id: 'drinksZone',
+      name: 'Drinks area (flexible)',
+      time: '5:00+',
+      note: 'Chelsea/Meatpacking cluster; pick venue based on mood and crowd.',
+      stepIds: ['step6'],
+      color: '#b95f3c',
+      coords: [
+        [40.7449, -74.01015],
+        [40.7449, -73.99772],
+        [40.73522, -73.99772],
+        [40.73522, -74.01062],
+      ],
+    },
+  ],
 };
+
+const BASE_ITINERARY = applyPatchToConfig(DEFAULT_ITINERARY, FINALIZED_ITINERARY_PATCH);
+
+let activeConfig = deepClone(BASE_ITINERARY);
+let activeRenderer = null;
+let activeStepId = null;
+let renderNonce = 0;
 
 class LeafletRenderer {
   constructor(containerId) {
@@ -135,16 +273,27 @@ class LeafletRenderer {
     return Promise.resolve();
   }
 
+  destroy() {
+    if (this.map) {
+      this.map.remove();
+    }
+    this.featureRegistry = [];
+    this.featuresByStep.clear();
+  }
+
   registerFeature(stepIds, feature) {
     this.featureRegistry.push(feature);
-    for (const stepId of stepIds) {
+
+    for (const stepId of stepIds || []) {
       if (!this.featuresByStep.has(stepId)) this.featuresByStep.set(stepId, []);
       this.featuresByStep.get(stepId).push(feature);
     }
   }
 
   extendBounds(coord) {
-    this.bounds.extend(coord);
+    if (isValidCoord(coord)) {
+      this.bounds.extend(coord);
+    }
   }
 
   addStop(stepIds, stop) {
@@ -152,7 +301,7 @@ class LeafletRenderer {
       radius: 7,
       color: '#ffffff',
       weight: 2,
-      fillColor: stop.markerColor,
+      fillColor: stop.markerColor || '#4a6279',
       fillOpacity: 0.95,
       opacity: 1,
     }).addTo(this.map);
@@ -176,7 +325,6 @@ class LeafletRenderer {
     };
 
     this.registerFeature(stepIds, feature);
-    return layer;
   }
 
   addWaypoint(stepIds, waypoint) {
@@ -331,22 +479,33 @@ class MapboxRenderer {
     return this.readyPromise;
   }
 
+  destroy() {
+    if (this.map) {
+      this.map.remove();
+    }
+    this.featureRegistry = [];
+    this.featuresByStep.clear();
+  }
+
   registerFeature(stepIds, feature) {
     this.featureRegistry.push(feature);
-    for (const stepId of stepIds) {
+
+    for (const stepId of stepIds || []) {
       if (!this.featuresByStep.has(stepId)) this.featuresByStep.set(stepId, []);
       this.featuresByStep.get(stepId).push(feature);
     }
   }
 
   extendBounds(coord) {
-    this.bounds.extend([coord[1], coord[0]]);
+    if (isValidCoord(coord)) {
+      this.bounds.extend([coord[1], coord[0]]);
+    }
   }
 
   addStop(stepIds, stop) {
     const el = document.createElement('div');
     el.className = 'mb-stop-marker';
-    el.style.background = stop.markerColor;
+    el.style.background = stop.markerColor || '#4a6279';
 
     const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
       .setLngLat([stop.coord[1], stop.coord[0]])
@@ -421,6 +580,7 @@ class MapboxRenderer {
       'line-width': route.dashed ? 4 : 4.5,
       'line-opacity': 0.82,
     };
+
     if (route.dashed) {
       paint['line-dasharray'] = [2, 1.4];
     }
@@ -438,10 +598,7 @@ class MapboxRenderer {
 
     this.map.on('click', layerId, (evt) => {
       if (!evt.lngLat) return;
-      new mapboxgl.Popup({ maxWidth: '300px' })
-        .setLngLat(evt.lngLat)
-        .setHTML(buildRoutePopup(route))
-        .addTo(this.map);
+      new mapboxgl.Popup({ maxWidth: '300px' }).setLngLat(evt.lngLat).setHTML(buildRoutePopup(route)).addTo(this.map);
     });
 
     this.map.on('mouseenter', layerId, () => {
@@ -482,8 +639,7 @@ class MapboxRenderer {
     const lineLayerId = `zone-line-${this.sourceCounter}`;
     this.sourceCounter += 1;
 
-    const coordinates = zone.coords.map((coord) => [coord[1], coord[0]]);
-    const closed = closeRing(coordinates);
+    const coordinates = closeRing(zone.coords.map((coord) => [coord[1], coord[0]]));
 
     this.map.addSource(sourceId, {
       type: 'geojson',
@@ -491,7 +647,7 @@ class MapboxRenderer {
         type: 'Feature',
         geometry: {
           type: 'Polygon',
-          coordinates: [closed],
+          coordinates: [coordinates],
         },
       },
     });
@@ -519,10 +675,7 @@ class MapboxRenderer {
 
     this.map.on('click', fillLayerId, (evt) => {
       if (!evt.lngLat) return;
-      new mapboxgl.Popup({ maxWidth: '320px' })
-        .setLngLat(evt.lngLat)
-        .setHTML(buildZonePopup(zone))
-        .addTo(this.map);
+      new mapboxgl.Popup({ maxWidth: '320px' }).setLngLat(evt.lngLat).setHTML(buildZonePopup(zone)).addTo(this.map);
     });
 
     this.map.on('mouseenter', fillLayerId, () => {
@@ -583,12 +736,286 @@ class MapboxRenderer {
   }
 }
 
+function deepClone(value) {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function deepMerge(baseValue, patchValue) {
+  if (patchValue === undefined) {
+    return deepClone(baseValue);
+  }
+
+  if (Array.isArray(patchValue)) {
+    return deepClone(patchValue);
+  }
+
+  if (isPlainObject(baseValue) && isPlainObject(patchValue)) {
+    const merged = deepClone(baseValue);
+    for (const key of Object.keys(patchValue)) {
+      merged[key] = deepMerge(baseValue[key], patchValue[key]);
+    }
+    return merged;
+  }
+
+  if (isPlainObject(patchValue)) {
+    return deepClone(patchValue);
+  }
+
+  return patchValue;
+}
+
+function mergeArrayById(baseArray, patchArray) {
+  if (!Array.isArray(baseArray)) return [];
+  if (!Array.isArray(patchArray)) return deepClone(baseArray);
+
+  const merged = baseArray.map((item) => deepClone(item));
+  const indexById = new Map();
+
+  merged.forEach((item, idx) => {
+    if (item && item.id) indexById.set(item.id, idx);
+  });
+
+  for (const patchItem of patchArray) {
+    if (!isPlainObject(patchItem) || !patchItem.id) continue;
+
+    if (indexById.has(patchItem.id)) {
+      const idx = indexById.get(patchItem.id);
+      merged[idx] = deepMerge(merged[idx], patchItem);
+    } else {
+      merged.push(deepClone(patchItem));
+      indexById.set(patchItem.id, merged.length - 1);
+    }
+  }
+
+  const patchOrder = patchArray.filter((item) => isPlainObject(item) && item.id).map((item) => item.id);
+  const patchOrderSet = new Set(patchOrder);
+
+  const ordered = [];
+  for (const id of patchOrder) {
+    const idx = indexById.get(id);
+    if (idx !== undefined) ordered.push(merged[idx]);
+  }
+
+  for (const item of merged) {
+    if (!item?.id || !patchOrderSet.has(item.id)) {
+      ordered.push(item);
+    }
+  }
+
+  return ordered;
+}
+
+function normalizeCoord(coord) {
+  if (!Array.isArray(coord) || coord.length < 2) return null;
+
+  const lat = Number(coord[0]);
+  const lng = Number(coord[1]);
+
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+  return [lat, lng];
+}
+
+function normalizeCoordList(coords) {
+  if (!Array.isArray(coords)) return [];
+  return coords.map((coord) => normalizeCoord(coord)).filter((coord) => Boolean(coord));
+}
+
+function isValidCoord(coord) {
+  return Boolean(normalizeCoord(coord));
+}
+
 function closeRing(coords) {
   if (coords.length === 0) return coords;
+
   const first = coords[0];
   const last = coords[coords.length - 1];
+
   if (first[0] === last[0] && first[1] === last[1]) return coords;
   return [...coords, first];
+}
+
+function buildDefaultPatchTemplate(config) {
+  return {
+    googleMapsUrl: config.googleMapsUrl || FINAL_GOOGLE_MAPS_URL,
+    weatherNote: config.weatherNote,
+    steps: config.steps.map((step) => ({
+      id: step.id,
+      time: step.time,
+      title: step.title,
+      meta: step.meta,
+      color: step.color,
+    })),
+    stops: config.stops.map((stop) => ({
+      id: stop.id,
+      name: stop.name,
+      time: stop.time,
+      address: stop.address,
+      note: stop.note,
+      markerColor: stop.markerColor,
+      stepIds: stop.stepIds,
+      hidden: Boolean(stop.hidden),
+    })),
+    staticPoints: config.staticPoints.map((point) => ({
+      id: point.id,
+      name: point.name,
+      time: point.time,
+      address: point.address,
+      note: point.note,
+      markerColor: point.markerColor,
+      coord: point.coord,
+      stepIds: point.stepIds,
+      hidden: Boolean(point.hidden),
+    })),
+    parkWaypoints: config.parkWaypoints.map((waypoint) => ({
+      id: waypoint.id,
+      label: waypoint.label,
+      note: waypoint.note,
+      coord: waypoint.coord,
+      stepIds: waypoint.stepIds,
+      hidden: Boolean(waypoint.hidden),
+    })),
+    routes: config.routes.map((route) => ({
+      id: route.id,
+      name: route.name,
+      time: route.time,
+      note: route.note,
+      color: route.color,
+      dashed: Boolean(route.dashed),
+      stepIds: route.stepIds,
+      coords: route.coords,
+      hidden: Boolean(route.hidden),
+    })),
+    zones: config.zones.map((zone) => ({
+      id: zone.id,
+      name: zone.name,
+      time: zone.time,
+      note: zone.note,
+      color: zone.color,
+      coords: zone.coords,
+      stepIds: zone.stepIds,
+      hidden: Boolean(zone.hidden),
+    })),
+  };
+}
+
+function applyPatchToConfig(baseConfig, patch) {
+  const next = deepClone(baseConfig);
+
+  if (!isPlainObject(patch)) return next;
+
+  if (typeof patch.weatherNote === 'string') {
+    next.weatherNote = patch.weatherNote;
+  }
+
+  if (Array.isArray(patch.steps)) {
+    next.steps = mergeArrayById(next.steps, patch.steps);
+  }
+
+  if (Array.isArray(patch.stops)) {
+    next.stops = mergeArrayById(next.stops, patch.stops);
+  }
+
+  if (Array.isArray(patch.staticPoints)) {
+    next.staticPoints = mergeArrayById(next.staticPoints, patch.staticPoints);
+  }
+
+  if (Array.isArray(patch.parkWaypoints)) {
+    next.parkWaypoints = mergeArrayById(next.parkWaypoints, patch.parkWaypoints);
+  }
+
+  if (Array.isArray(patch.routes)) {
+    next.routes = mergeArrayById(next.routes, patch.routes);
+  }
+
+  if (Array.isArray(patch.zones)) {
+    next.zones = mergeArrayById(next.zones, patch.zones);
+  }
+
+  return sanitizeConfig(next);
+}
+
+function sanitizeConfig(config) {
+  const next = deepClone(config);
+
+  next.steps = (Array.isArray(next.steps) ? next.steps : [])
+    .filter((step) => isPlainObject(step) && step.id)
+    .map((step) => ({
+      ...step,
+      stepIds: Array.isArray(step.stepIds) ? step.stepIds : undefined,
+      color: typeof step.color === 'string' ? step.color : '#597081',
+    }));
+
+  next.stops = (Array.isArray(next.stops) ? next.stops : [])
+    .filter((stop) => isPlainObject(stop) && stop.id)
+    .map((stop) => ({
+      ...stop,
+      stepIds: Array.isArray(stop.stepIds) ? stop.stepIds : [],
+      hidden: Boolean(stop.hidden),
+      markerColor: typeof stop.markerColor === 'string' ? stop.markerColor : '#4a6279',
+      fallback: normalizeCoord(stop.fallback) || normalizeCoord(stop.coord) || null,
+    }));
+
+  next.staticPoints = (Array.isArray(next.staticPoints) ? next.staticPoints : [])
+    .filter((point) => isPlainObject(point) && point.id)
+    .map((point) => ({
+      ...point,
+      stepIds: Array.isArray(point.stepIds) ? point.stepIds : [],
+      hidden: Boolean(point.hidden),
+      markerColor: typeof point.markerColor === 'string' ? point.markerColor : '#4a6279',
+      coord: normalizeCoord(point.coord),
+    }))
+    .filter((point) => Boolean(point.coord));
+
+  next.parkWaypoints = (Array.isArray(next.parkWaypoints) ? next.parkWaypoints : [])
+    .filter((waypoint) => isPlainObject(waypoint) && waypoint.id)
+    .map((waypoint) => ({
+      ...waypoint,
+      stepIds: Array.isArray(waypoint.stepIds) ? waypoint.stepIds : ['step1'],
+      hidden: Boolean(waypoint.hidden),
+      coord: normalizeCoord(waypoint.coord),
+    }))
+    .filter((waypoint) => Boolean(waypoint.coord));
+
+  next.routes = (Array.isArray(next.routes) ? next.routes : [])
+    .filter((route) => isPlainObject(route) && route.id)
+    .map((route) => ({
+      ...route,
+      stepIds: Array.isArray(route.stepIds) ? route.stepIds : [],
+      hidden: Boolean(route.hidden),
+      dashed: Boolean(route.dashed),
+      color: typeof route.color === 'string' ? route.color : '#557083',
+    }));
+
+  next.zones = (Array.isArray(next.zones) ? next.zones : [])
+    .filter((zone) => isPlainObject(zone) && zone.id)
+    .map((zone) => ({
+      ...zone,
+      stepIds: Array.isArray(zone.stepIds) ? zone.stepIds : [],
+      hidden: Boolean(zone.hidden),
+      color: typeof zone.color === 'string' ? zone.color : '#667281',
+      coords: normalizeCoordList(zone.coords),
+    }))
+    .filter((zone) => zone.coords.length >= 3);
+
+  next.googleMapsUrl =
+    typeof next.googleMapsUrl === 'string' && next.googleMapsUrl.trim()
+      ? next.googleMapsUrl.trim()
+      : FINAL_GOOGLE_MAPS_URL;
+
+  if (typeof next.weatherNote !== 'string') {
+    next.weatherNote = DEFAULT_ITINERARY.weatherNote;
+  }
+
+  return next;
 }
 
 function buildStopPopup(stop) {
@@ -650,23 +1077,291 @@ function setEngineBadge(message) {
   badge.textContent = message;
 }
 
+function setWeatherNote(message) {
+  const weather = document.getElementById('weather-note');
+  weather.textContent = message;
+}
+
+function getItineraryCompletionInfo() {
+  const itineraryEnd = new Date(`${ITINERARY_DATE}T23:59:59`);
+  const now = new Date();
+  const completed = now.getTime() > itineraryEnd.getTime();
+
+  const absoluteDate = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(`${ITINERARY_DATE}T12:00:00`));
+
+  const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startItinerary = new Date(`${ITINERARY_DATE}T00:00:00`);
+  const dayDiff = Math.round((startNow.getTime() - startItinerary.getTime()) / 86400000);
+
+  if (completed && dayDiff === 1) {
+    return {
+      completed: true,
+      message: `Completed yesterday (${absoluteDate})`,
+    };
+  }
+
+  if (completed) {
+    return {
+      completed: true,
+      message: `Completed on ${absoluteDate}`,
+    };
+  }
+
+  return {
+    completed: false,
+    message: `Planned for ${absoluteDate}`,
+  };
+}
+
+function setTripStatus(info) {
+  const el = document.getElementById('trip-status');
+  el.textContent = `Status: ${info.message}`;
+  el.classList.toggle('upcoming', !info.completed);
+}
+
+function setGoogleMapsLink(url) {
+  const link = document.getElementById('google-maps-link');
+  link.href = getGoogleMapsUrl({ googleMapsUrl: url });
+}
+
+function getStepColor(config, stepId, fallback) {
+  const step = config.steps.find((item) => item.id === stepId);
+  if (step?.color) return step.color;
+  return fallback || '#557083';
+}
+
+function getCoordById(itemMap, id) {
+  const item = itemMap.get(id);
+  return item?.coord || null;
+}
+
+function defaultRouteCoords(routeId, stopsById, staticPointsById, parkWaypointsById) {
+  const wp = (id, fallback) => getCoordById(parkWaypointsById, id) || fallback;
+  const stop = (id) => getCoordById(stopsById, id);
+  const point = (id) => getCoordById(staticPointsById, id);
+
+  if (routeId === 'routeA') {
+    return normalizeCoordList([
+      stop('hotel'),
+      [40.76456, -73.97645],
+      wp('cp-entrance', [40.76459, -73.97361]),
+      wp('cp-pond', [40.76681, -73.97332]),
+      [40.76842, -73.97326],
+      wp('cp-mall', [40.7714, -73.97383]),
+      [40.77293, -73.97228],
+      wp('cp-bethesda', [40.77404, -73.97012]),
+      wp('cp-bowbridge', [40.77544, -73.97158]),
+      [40.77479, -73.96925],
+      [40.77394, -73.96775],
+      wp('cp-exit', [40.77274, -73.96615]),
+      [40.77228, -73.96357],
+      [40.77156, -73.96085],
+      stop('ej'),
+    ]);
+  }
+
+  if (routeId === 'routeB') {
+    return normalizeCoordList([stop('ej'), [40.77042, -73.9632], [40.77077, -73.96588], stop('frick')]);
+  }
+
+  if (routeId === 'routeC') {
+    return normalizeCoordList([
+      stop('frick'),
+      [40.76795, -73.97765],
+      [40.7587, -73.98548],
+      [40.75479, -73.99012],
+      stop('cisiamo'),
+    ]);
+  }
+
+  if (routeId === 'routeD') {
+    return normalizeCoordList([
+      point('highlineStart'),
+      [40.7522, -74.00565],
+      [40.74944, -74.00476],
+      [40.74632, -74.00422],
+      [40.7439, -74.00402],
+      [40.74207, -74.00527],
+      [40.74095, -74.00721],
+      [40.73958, -74.00899],
+      point('highlineEnd'),
+    ]);
+  }
+
+  return [];
+}
+
+function buildGeometry(config, stopsById, staticPointsById) {
+  const parkWaypoints = config.parkWaypoints
+    .filter((waypoint) => !waypoint.hidden)
+    .map((waypoint) => ({
+      ...waypoint,
+      coord: normalizeCoord(waypoint.coord),
+    }))
+    .filter((waypoint) => Boolean(waypoint.coord));
+
+  const parkWaypointsById = new Map(parkWaypoints.map((waypoint) => [waypoint.id, waypoint]));
+
+  const routes = config.routes
+    .filter((route) => !route.hidden)
+    .map((route) => {
+      const fallbackColor = getStepColor(config, route.stepIds?.[0], '#557083');
+      const customCoords = normalizeCoordList(route.coords);
+      const coords = customCoords.length >= 2
+        ? customCoords
+        : defaultRouteCoords(route.id, stopsById, staticPointsById, parkWaypointsById);
+
+      if (coords.length < 2) return null;
+
+      return {
+        ...route,
+        coords,
+        color: route.color || fallbackColor,
+      };
+    })
+    .filter((route) => Boolean(route));
+
+  const zones = config.zones
+    .filter((zone) => !zone.hidden)
+    .map((zone) => {
+      const coords = normalizeCoordList(zone.coords);
+      if (coords.length < 3) return null;
+
+      return {
+        ...zone,
+        coords,
+        color: zone.color || getStepColor(config, zone.stepIds?.[0], '#667281'),
+      };
+    })
+    .filter((zone) => Boolean(zone));
+
+  return { parkWaypoints, routes, zones };
+}
+
+function renderLegend(steps) {
+  const legend = document.getElementById('legend');
+  const lines = steps
+    .map((step) => {
+      return `
+      <div class="legend-row">
+        <span class="legend-chip" style="background:${step.color}"></span>
+        <span>${escapeHtml(step.time)} - ${escapeHtml(step.title)}</span>
+      </div>
+    `;
+    })
+    .join('');
+
+  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}`;
+}
+
+function renderItineraryList(steps, onSelect, completedView) {
+  const list = document.getElementById('itinerary-list');
+  list.innerHTML = '';
+
+  for (const step of steps) {
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'itinerary-item';
+    if (completedView) button.classList.add('completed');
+    button.dataset.stepId = step.id;
+    button.style.setProperty('--item-color', step.color || '#667281');
+    button.innerHTML = `
+      <span class="time">${escapeHtml(step.time || '')}</span>
+      <span class="title">${escapeHtml(step.title || step.id)}</span>
+      <span class="meta">${escapeHtml(step.meta || '')}</span>
+    `;
+
+    button.addEventListener('click', () => {
+      onSelect(step.id);
+    });
+
+    li.appendChild(button);
+    list.appendChild(li);
+  }
+}
+
+function setActiveListItem(stepId) {
+  const buttons = document.querySelectorAll('.itinerary-item');
+  for (const button of buttons) {
+    button.classList.toggle('active', button.dataset.stepId === stepId);
+  }
+}
+
+function getStoredPatch() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!isPlainObject(parsed)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function storePatch(patch) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(patch));
+  } catch {
+    // Ignore storage errors in private mode / restricted contexts.
+  }
+}
+
+function setEditorPatch(patch) {
+  const editor = document.getElementById('itinerary-editor');
+  editor.value = JSON.stringify(patch, null, 2);
+}
+
+function readEditorPatch() {
+  const editor = document.getElementById('itinerary-editor');
+  const value = editor.value.trim();
+  if (!value) {
+    throw new Error('Editor is empty. Paste JSON before applying.');
+  }
+
+  const parsed = JSON.parse(value);
+  if (!isPlainObject(parsed)) {
+    throw new Error('JSON must be an object.');
+  }
+
+  return parsed;
+}
+
 async function geocodeStop(stop, useMapbox) {
-  if (useMapbox) {
+  const embeddedCoord = normalizeCoord(stop.coord);
+  if (embeddedCoord) {
+    return { coord: embeddedCoord, source: 'Provided coordinate' };
+  }
+
+  if (useMapbox && stop.address) {
     const mapboxCoord = await geocodeWithMapbox(stop.address);
     if (mapboxCoord) {
       return { coord: mapboxCoord, source: 'Mapbox Geocoding API' };
     }
   }
 
-  const nominatimCoord = await geocodeWithNominatim(stop.address);
-  if (nominatimCoord) {
-    return { coord: nominatimCoord, source: 'Nominatim (OpenStreetMap)' };
+  if (stop.address) {
+    const nominatimCoord = await geocodeWithNominatim(stop.address);
+    if (nominatimCoord) {
+      return { coord: nominatimCoord, source: 'Nominatim (OpenStreetMap)' };
+    }
   }
 
-  return {
-    coord: stop.fallback,
-    source: 'Fallback coordinate (Nominatim lookup, 2026-02-13)',
-  };
+  const fallback = normalizeCoord(stop.fallback);
+  if (fallback) {
+    return {
+      coord: fallback,
+      source: 'Fallback coordinate (Nominatim lookup, 2026-02-13)',
+    };
+  }
+
+  return null;
 }
 
 async function geocodeWithMapbox(address) {
@@ -683,7 +1378,7 @@ async function geocodeWithMapbox(address) {
     const feature = json.features?.[0];
     if (!feature?.center || feature.center.length < 2) return null;
     const [lng, lat] = feature.center;
-    return [lat, lng];
+    return normalizeCoord([lat, lng]);
   } catch {
     return null;
   }
@@ -705,212 +1400,9 @@ async function geocodeWithNominatim(address) {
     const json = await response.json();
     if (!Array.isArray(json) || json.length === 0) return null;
 
-    const lat = Number(json[0].lat);
-    const lng = Number(json[0].lon);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
-    return [lat, lng];
+    return normalizeCoord([json[0].lat, json[0].lon]);
   } catch {
     return null;
-  }
-}
-
-function buildGeometry(stopsById) {
-  const parkWaypoints = [
-    {
-      id: 'cp-entrance',
-      label: 'Park Entrance',
-      note: 'Enter at Grand Army Plaza (near 59th St & 5th Ave).',
-      coord: [40.76459, -73.97361],
-    },
-    {
-      id: 'cp-pond',
-      label: 'The Pond',
-      note: 'Sheltered water views just inside the southeast corner.',
-      coord: [40.76681, -73.97332],
-    },
-    {
-      id: 'cp-mall',
-      label: 'The Mall',
-      note: 'Tree-lined promenade on Literary Walk.',
-      coord: [40.7714, -73.97383],
-    },
-    {
-      id: 'cp-bethesda',
-      label: 'Bethesda Terrace',
-      note: 'Fountain and arcade; good scenic midpoint.',
-      coord: [40.77404, -73.97012],
-    },
-    {
-      id: 'cp-bowbridge',
-      label: 'Bow Bridge',
-      note: 'Short optional scenic detour before heading east.',
-      coord: [40.77544, -73.97158],
-    },
-    {
-      id: 'cp-exit',
-      label: 'East Side Exit',
-      note: 'Exit around E 72nd St / 5th Ave to approach 3rd Ave efficiently.',
-      coord: [40.77274, -73.96615],
-    },
-  ];
-
-  const routeA = {
-    id: 'routeA',
-    name: 'Central Park interior walk',
-    time: '9:30-10:30',
-    note: 'Scenic route via interior paths (Pond, Mall, Bethesda, Bow Bridge), then east exit to EJ\'s.',
-    color: STEP_CONFIG[0].color,
-    dashed: false,
-    coords: [
-      stopsById.hotel.coord,
-      [40.76456, -73.97645],
-      parkWaypoints[0].coord,
-      parkWaypoints[1].coord,
-      [40.76842, -73.97326],
-      parkWaypoints[2].coord,
-      [40.77293, -73.97228],
-      parkWaypoints[3].coord,
-      parkWaypoints[4].coord,
-      [40.77479, -73.96925],
-      [40.77394, -73.96775],
-      parkWaypoints[5].coord,
-      [40.77228, -73.96357],
-      [40.77156, -73.96085],
-      stopsById.ej.coord,
-    ],
-  };
-
-  const routeB = {
-    id: 'routeB',
-    name: 'Walk: EJ\'s to The Frick',
-    time: '11:30-11:45',
-    note: 'Short Upper East Side walk west toward Fifth Avenue.',
-    color: STEP_CONFIG[2].color,
-    dashed: false,
-    coords: [
-      stopsById.ej.coord,
-      [40.77042, -73.9632],
-      [40.77077, -73.96588],
-      stopsById.frick.coord,
-    ],
-  };
-
-  const routeC = {
-    id: 'routeC',
-    name: 'Transit/Ride: Frick to Ci Siamo',
-    time: '1:15-2:00',
-    note: 'Recommended as subway/ride transfer (not walking).',
-    color: STEP_CONFIG[3].color,
-    dashed: true,
-    coords: [
-      stopsById.frick.coord,
-      [40.76795, -73.97765],
-      [40.7587, -73.98548],
-      [40.75479, -73.99012],
-      stopsById.cisiamo.coord,
-    ],
-  };
-
-  const routeD = {
-    id: 'routeD',
-    name: 'High Line southbound walk',
-    time: '3:30-4:30',
-    note: 'Reasonable southbound segment from Hudson Yards area into Meatpacking.',
-    color: STEP_CONFIG[4].color,
-    dashed: false,
-    coords: [
-      STATIC_POINTS.highlineStart.coord,
-      [40.7522, -74.00565],
-      [40.74944, -74.00476],
-      [40.74632, -74.00422],
-      [40.7439, -74.00402],
-      [40.74207, -74.00527],
-      [40.74095, -74.00721],
-      [40.73958, -74.00899],
-      STATIC_POINTS.highlineEnd.coord,
-    ],
-  };
-
-  const zones = {
-    highLineZone: {
-      id: 'highLineZone',
-      name: 'High Line focus zone',
-      time: '3:30-4:30',
-      note: 'Flexible entry points near Hudson Yards; route continues south.',
-      color: STEP_CONFIG[4].color,
-      coords: [
-        [40.75475, -74.0078],
-        [40.7541, -74.00385],
-        [40.74862, -74.00353],
-        [40.74332, -74.00538],
-        [40.73901, -74.00874],
-        [40.73902, -74.01124],
-        [40.74298, -74.00847],
-        [40.74833, -74.00625],
-      ],
-    },
-    drinksZone: {
-      id: 'drinksZone',
-      name: 'Drinks area (flexible)',
-      time: '5:00+',
-      note: 'Chelsea/Meatpacking cluster; pick venue based on mood and crowd.',
-      color: STEP_CONFIG[5].color,
-      coords: [
-        [40.7449, -74.01015],
-        [40.7449, -73.99772],
-        [40.73522, -73.99772],
-        [40.73522, -74.01062],
-      ],
-    },
-  };
-
-  return { parkWaypoints, routes: { routeA, routeB, routeC, routeD }, zones };
-}
-
-function renderLegend() {
-  const legend = document.getElementById('legend');
-  const lines = STEP_CONFIG.map((step) => {
-    return `
-      <div class="legend-row">
-        <span class="legend-chip" style="background:${step.color}"></span>
-        <span>${escapeHtml(step.time)} - ${escapeHtml(step.title)}</span>
-      </div>
-    `;
-  }).join('');
-
-  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}`;
-}
-
-function renderItineraryList(onSelect) {
-  const list = document.getElementById('itinerary-list');
-  list.innerHTML = '';
-
-  for (const step of STEP_CONFIG) {
-    const li = document.createElement('li');
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'itinerary-item';
-    button.dataset.stepId = step.id;
-    button.style.setProperty('--item-color', step.color);
-    button.innerHTML = `
-      <span class="time">${escapeHtml(step.time)}</span>
-      <span class="title">${escapeHtml(step.title)}</span>
-      <span class="meta">${escapeHtml(step.meta)}</span>
-    `;
-
-    button.addEventListener('click', () => {
-      onSelect(step.id);
-    });
-
-    li.appendChild(button);
-    list.appendChild(li);
-  }
-}
-
-function setActiveListItem(stepId) {
-  const buttons = document.querySelectorAll('.itinerary-item');
-  for (const button of buttons) {
-    button.classList.toggle('active', button.dataset.stepId === stepId);
   }
 }
 
@@ -926,11 +1418,147 @@ async function createRenderer() {
     await renderer.whenReady();
     setEngineBadge('Map engine: Mapbox GL JS');
     return renderer;
-  } catch (error) {
-    renderer.map.remove();
+  } catch {
+    renderer.destroy();
     setEngineBadge('Map engine: Leaflet + OpenStreetMap (Mapbox failed, fallback used)');
     return new LeafletRenderer('map');
   }
+}
+
+function setControlsDisabled(disabled) {
+  document.getElementById('apply-updates-btn').disabled = disabled;
+  document.getElementById('reset-updates-btn').disabled = disabled;
+  document.getElementById('download-btn').disabled = disabled;
+}
+
+async function renderMap(config) {
+  const nonce = ++renderNonce;
+  const completionInfo = getItineraryCompletionInfo();
+  setControlsDisabled(true);
+  setWeatherNote(config.weatherNote);
+  setTripStatus(completionInfo);
+  setGoogleMapsLink(config.googleMapsUrl);
+  setStatus('Geocoding fixed stops...');
+
+  if (activeRenderer) {
+    activeRenderer.destroy();
+    activeRenderer = null;
+  }
+
+  const mapContainer = document.getElementById('map');
+  mapContainer.innerHTML = '';
+
+  const renderer = await createRenderer();
+  await renderer.whenReady();
+
+  if (nonce !== renderNonce) {
+    renderer.destroy();
+    return;
+  }
+
+  const geocodedStops = [];
+
+  for (const stop of config.stops) {
+    if (stop.hidden) continue;
+    const result = await geocodeStop(stop, renderer.mode === 'mapbox');
+    if (nonce !== renderNonce) {
+      renderer.destroy();
+      return;
+    }
+
+    if (!result) continue;
+
+    geocodedStops.push({
+      ...stop,
+      coord: result.coord,
+      geocodeSource: result.source,
+    });
+  }
+
+  const stopsById = new Map(geocodedStops.map((stop) => [stop.id, stop]));
+
+  const staticPoints = config.staticPoints
+    .filter((point) => !point.hidden)
+    .map((point) => ({
+      ...point,
+      coord: normalizeCoord(point.coord),
+      geocodeSource: 'Provided coordinate',
+    }))
+    .filter((point) => Boolean(point.coord));
+
+  const staticPointsById = new Map(staticPoints.map((point) => [point.id, point]));
+
+  const { parkWaypoints, routes, zones } = buildGeometry(config, stopsById, staticPointsById);
+
+  renderLegend(config.steps);
+
+  for (const route of routes) {
+    renderer.addRoute(route.stepIds, route);
+  }
+
+  for (const zone of zones) {
+    renderer.addZone(zone.stepIds, zone);
+  }
+
+  for (const waypoint of parkWaypoints) {
+    renderer.addWaypoint(waypoint.stepIds, waypoint);
+  }
+
+  for (const stop of [...geocodedStops, ...staticPoints]) {
+    renderer.addStop(stop.stepIds, stop);
+  }
+
+  renderer.fitToData();
+
+  activeRenderer = renderer;
+
+  renderItineraryList(
+    config.steps,
+    (stepId) => {
+      activeStepId = stepId;
+      setActiveListItem(stepId);
+      activeRenderer?.setActiveStep(stepId);
+    },
+    completionInfo.completed,
+  );
+
+  const defaultStepId =
+    activeStepId && config.steps.some((step) => step.id === activeStepId) ? activeStepId : config.steps[0]?.id;
+
+  if (defaultStepId) {
+    activeStepId = defaultStepId;
+    setActiveListItem(defaultStepId);
+    activeRenderer.setActiveStep(defaultStepId);
+  }
+
+  const sourceSummary = geocodedStops
+    .map((stop) => `${stop.name}: ${stop.geocodeSource}`)
+    .join(' | ');
+
+  setStatus(`Loaded. Geocode sources -> ${sourceSummary}`);
+  setControlsDisabled(false);
+}
+
+async function applyEditorPatch() {
+  try {
+    const patch = readEditorPatch();
+    const nextConfig = applyPatchToConfig(BASE_ITINERARY, patch);
+    activeConfig = nextConfig;
+    storePatch(patch);
+    await renderMap(activeConfig);
+    setStatus('Updates applied. Map redrawn from editor JSON.');
+  } catch (error) {
+    setStatus(`Update failed: ${error.message}`);
+  }
+}
+
+async function resetEditorTemplate() {
+  const patch = buildDefaultPatchTemplate(BASE_ITINERARY);
+  setEditorPatch(patch);
+  storePatch(patch);
+  activeConfig = applyPatchToConfig(BASE_ITINERARY, patch);
+  await renderMap(activeConfig);
+  setStatus('Editor reset to default itinerary template.');
 }
 
 async function exportMapImage() {
@@ -962,73 +1590,24 @@ async function exportMapImage() {
   }
 }
 
-async function init() {
-  setStatus('Geocoding fixed stops...');
-
-  const renderer = await createRenderer();
-  await renderer.whenReady();
-
-  const geocodedStops = await Promise.all(
-    FIXED_STOPS.map(async (stop) => {
-      const result = await geocodeStop(stop, renderer.mode === 'mapbox');
-      return {
-        ...stop,
-        coord: result.coord,
-        geocodeSource: result.source,
-      };
-    }),
-  );
-
-  const stopsById = Object.fromEntries(geocodedStops.map((stop) => [stop.id, stop]));
-
-  const { routes, parkWaypoints, zones } = buildGeometry(stopsById);
-
-  const enrichedStops = {
-    ...stopsById,
-    highlineStart: STATIC_POINTS.highlineStart,
-    highlineEnd: STATIC_POINTS.highlineEnd,
-  };
-
-  renderLegend();
-
-  renderer.addRoute(['step1'], routes.routeA);
-  renderer.addRoute(['step3'], routes.routeB);
-  renderer.addRoute(['step4'], routes.routeC);
-  renderer.addRoute(['step5'], routes.routeD);
-
-  renderer.addZone(['step5'], zones.highLineZone);
-  renderer.addZone(['step6'], zones.drinksZone);
-
-  for (const waypoint of parkWaypoints) {
-    renderer.addWaypoint(['step1'], waypoint);
-  }
-
-  renderer.addStop(['step1'], enrichedStops.hotel);
-  renderer.addStop(['step1', 'step2', 'step3'], enrichedStops.ej);
-  renderer.addStop(['step3', 'step4'], enrichedStops.frick);
-  renderer.addStop(['step4'], enrichedStops.cisiamo);
-  renderer.addStop(['step5'], enrichedStops.highlineStart);
-  renderer.addStop(['step5'], enrichedStops.highlineEnd);
-
-  renderer.fitToData();
-
-  renderItineraryList((stepId) => {
-    setActiveListItem(stepId);
-    renderer.setActiveStep(stepId);
-  });
-
-  setActiveListItem('step1');
-  renderer.setActiveStep('step1');
-
-  const sourceSummary = geocodedStops
-    .map((stop) => `${stop.name}: ${stop.geocodeSource}`)
-    .join(' | ');
-
-  setStatus(`Loaded. Geocode sources -> ${sourceSummary}`);
-
+function wireEvents() {
   document.getElementById('download-btn').addEventListener('click', exportMapImage);
+  document.getElementById('apply-updates-btn').addEventListener('click', applyEditorPatch);
+  document.getElementById('reset-updates-btn').addEventListener('click', resetEditorTemplate);
+}
+
+async function init() {
+  wireEvents();
+
+  const storedPatch = getStoredPatch();
+  const startingPatch = storedPatch || buildDefaultPatchTemplate(BASE_ITINERARY);
+  setEditorPatch(startingPatch);
+
+  activeConfig = applyPatchToConfig(BASE_ITINERARY, startingPatch);
+  await renderMap(activeConfig);
 }
 
 init().catch((error) => {
   setStatus(`Initialization failed: ${error.message}`);
+  setControlsDisabled(false);
 });

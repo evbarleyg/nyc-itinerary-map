@@ -9,12 +9,40 @@
     <div id="app">
       <aside id="itinerary-panel">
         <h1>NYC Day Itinerary</h1>
-        <p class="weather-note">
+        <p id="weather-note" class="weather-note">
           Cold but sunny day. Central Park route prioritizes scenic interior paths to reduce wind exposure.
         </p>
+        <p id="trip-status" class="trip-status">Status: loading...</p>
         <p id="engine-badge" class="engine-badge">Map engine: detecting...</p>
         <ol id="itinerary-list" aria-label="Today itinerary"></ol>
+
+        <details class="editor-panel">
+          <summary>Update Itinerary JSON</summary>
+          <p class="editor-help">
+            Edit this JSON to update time blocks, stops, notes, and labels. Click apply to redraw the map.
+          </p>
+          <textarea
+            id="itinerary-editor"
+            class="editor-textarea"
+            spellcheck="false"
+            aria-label="Itinerary update JSON"
+          ></textarea>
+          <div class="editor-actions">
+            <button id="apply-updates-btn" type="button">Apply Updates</button>
+            <button id="reset-updates-btn" type="button">Reset Template</button>
+          </div>
+        </details>
+
         <div class="panel-actions">
+          <a
+            id="google-maps-link"
+            class="maps-link-btn"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open in Google Maps
+          </a>
           <button id="download-btn" type="button">Download Map (PNG)</button>
           <p id="status" class="status">Loading map...</p>
         </div>

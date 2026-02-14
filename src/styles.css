@@ -60,6 +60,24 @@ body,
   line-height: 1.35;
 }
 
+.trip-status {
+  margin: 0 0 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  width: fit-content;
+  border: 1px solid #c4d9c8;
+  background: #edf7ef;
+  color: #2f6240;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.trip-status.upcoming {
+  border-color: #c9d5e3;
+  background: #edf4fb;
+  color: #36526d;
+}
+
 .engine-badge {
   margin: 0 0 12px;
   display: inline-block;
@@ -78,6 +96,70 @@ body,
   margin: 0;
   display: grid;
   gap: 8px;
+}
+
+.editor-panel {
+  margin-top: 10px;
+  border: 1px solid #d4dfe7;
+  border-radius: 10px;
+  padding: 8px 10px 10px;
+  background: #f8fbfe;
+}
+
+.editor-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #30495f;
+}
+
+.editor-help {
+  margin: 8px 0 8px;
+  font-size: 0.78rem;
+  color: #557086;
+  line-height: 1.35;
+}
+
+.editor-textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border-radius: 8px;
+  border: 1px solid #c0d0dd;
+  padding: 8px;
+  background: #ffffff;
+  color: #1e2f3d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.editor-actions {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.editor-actions button {
+  appearance: none;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#apply-updates-btn {
+  background: #2d6d8a;
+  color: #f4fbff;
+}
+
+#reset-updates-btn {
+  background: #e6edf2;
+  color: #28445b;
 }
 
 .itinerary-item {
@@ -100,6 +182,11 @@ body,
 .itinerary-item.active {
   border-color: #9cb9ce;
   background: var(--active-bg);
+}
+
+.itinerary-item.completed {
+  background: #f5fbf5;
+  border-color: #c8dfc8;
 }
 
 .itinerary-item .time {
@@ -129,6 +216,24 @@ body,
   margin-top: 12px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
+}
+
+.maps-link-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: #3a5f2f;
+  color: #f6fbea;
+}
+
+.maps-link-btn:hover {
+  filter: brightness(1.05);
 }
 
 #download-btn {

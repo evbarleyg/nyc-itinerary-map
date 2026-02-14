@@ -6,6 +6,8 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "lint": "node --check src/main.js && node --check src/itinerary.js",
+    "test": "node --test",
     "build": "vite build",
     "preview": "vite preview"
   },
