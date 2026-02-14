@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saturday NYC Online Guide</title>
+    <style>
+      :root {
+        --bg: #f6f7f4;
+        --card: #ffffff;
+        --text: #1b242c;
+        --muted: #586773;
+        --line: #d9e1e7;
+        --accent: #1f5c7a;
+        --accent-soft: #e8f3f9;
+        --warn: #7f4b2e;
+        --ok: #2f6148;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #f1f4f6 0%, var(--bg) 35%, #f8f7f2 100%);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 14px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      ul {
+        margin: 0;
+      }
+
+      .top {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px;
+        box-shadow: 0 10px 24px rgba(20, 33, 45, 0.08);
+      }
+
+      .title {
+        font-size: 1.2rem;
+        font-weight: 750;
+        letter-spacing: 0.01em;
+      }
+
+      .subtitle {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.35;
+      }
+
+      .chips {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: #fdfefe;
+      }
+
+      .chip strong {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #3b5365;
+      }
+
+      .chip span {
+        display: block;
+        margin-top: 4px;
+        font-size: 0.92rem;
+        line-height: 1.35;
+      }
+
+      .grid {
+        margin-top: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .card h2 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .stop {
+        border: 1px solid #dbe3e9;
+        border-left: 5px solid var(--accent);
+        border-radius: 10px;
+        padding: 10px;
+        background: #fbfdff;
+      }
+
+      .stop + .stop {
+        margin-top: 8px;
+      }
+
+      .stop-time {
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: #335a70;
+      }
+
+      .stop-name {
+        margin-top: 3px;
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+
+      .stop-addr {
+        margin-top: 3px;
+        color: #4d616f;
+        font-size: 0.83rem;
+      }
+
+      .stop-why {
+        margin-top: 6px;
+        font-size: 0.88rem;
+        line-height: 1.35;
+      }
+
+      .tips {
+        margin-top: 6px;
+        padding-left: 18px;
+        font-size: 0.82rem;
+        color: #344b5c;
+        line-height: 1.35;
+      }
+
+      a {
+        color: #1b5f82;
+      }
+
+      .maps-link {
+        display: inline-block;
+        margin-top: 6px;
+        font-size: 0.83rem;
+        font-weight: 700;
+      }
+
+      .split {
+        display: grid;
+        gap: 8px;
+      }
+
+      .lane {
+        border: 1px solid #dce6ec;
+        border-radius: 10px;
+        padding: 9px;
+        background: #fcfeff;
+      }
+
+      .lane h3 {
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+
+      .lane ul {
+        padding-left: 18px;
+        font-size: 0.82rem;
+        color: #3a4f5f;
+        line-height: 1.35;
+      }
+
+      .alert {
+        border: 1px solid #e6d7c9;
+        background: #fef8f2;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .alert h3 {
+        color: var(--warn);
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+      }
+
+      .alert ul {
+        padding-left: 18px;
+        font-size: 0.83rem;
+        color: #624a39;
+        line-height: 1.35;
+      }
+
+      .good {
+        border: 1px solid #cce2d2;
+        background: #f4fbf7;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .good h3 {
+        color: var(--ok);
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+      }
+
+      .good ul {
+        padding-left: 18px;
+        font-size: 0.83rem;
+        color: #2f5743;
+        line-height: 1.35;
+      }
+
+      .actions {
+        display: grid;
+        gap: 8px;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #f8fcff;
+      }
+
+      .small {
+        margin-top: 6px;
+        font-size: 0.77rem;
+        color: #5f6f7d;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.35;
+      }
+
+      @media (min-width: 760px) {
+        .chips {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .split {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="top">
+        <h1 class="title">Saturday Online Guide</h1>
+        <p class="subtitle">
+          Base: Thompson Central Park New York, 119 W 56th St. Cold but sunny. Keep it loose and low-friction.
+        </p>
+        <div class="chips">
+          <article class="chip">
+            <strong>Now</strong>
+            <span>Napping/reset. Leave around 2:30-ish for the bridge start.</span>
+          </article>
+          <article class="chip">
+            <strong>Next</strong>
+            <span>Bridge walk, ferry back to Wall St/Pier 11, then Ten Bells around 4:30.</span>
+          </article>
+          <article class="chip">
+            <strong>Later</strong>
+            <span>Back to hotel, 8:40 arrival for 9:00 comedy, 10:45 Frank dinner.</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Stops</h2>
+
+          <div class="stop">
+            <div class="stop-time">2:30-ish</div>
+            <div class="stop-name">Brooklyn Bridge (Manhattan entrance near City Hall)</div>
+            <div class="stop-addr">Centre St & Brooklyn Bridge Blvd, New York, NY 10038 (Manhattan side approach)</div>
+            <p class="stop-why">Best daylight move: scenic walk without strict timing, then flexible return options.</p>
+            <ul class="tips">
+              <li>Use the pedestrian entrance and keep right on shared segments.</li>
+              <li>Wind is stronger on the span; gloves and hat matter.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=Brooklyn+Bridge+Pedestrian+Walkway+Entrance+near+City+Hall+New+York+NY" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+          </div>
+
+          <div class="stop">
+            <div class="stop-time">After crossing</div>
+            <div class="stop-name">NYC Ferry return option (primary)</div>
+            <div class="stop-addr">Departure likely DUMBO/Fulton Ferry landing (Brooklyn). Destination: Wall St/Pier 11, 11 South St, New York, NY 10004.</div>
+            <p class="stop-why">Fast, scenic reset back to Manhattan without retracing the full bridge.</p>
+            <ul class="tips">
+              <li>Check NYC Ferry app/live status before committing to the dock.</li>
+              <li>Fallback: walk back across the bridge if wait times are poor.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=NYC+Ferry+DUMBO+Fulton+Ferry+Landing" target="_blank" rel="noopener noreferrer">Open departure in Google Maps</a>
+          </div>
+
+          <div class="stop">
+            <div class="stop-time">4:30-ish</div>
+            <div class="stop-name">The Ten Bells</div>
+            <div class="stop-addr">247 Broome St, New York, NY 10002</div>
+            <p class="stop-why">Good late-afternoon landing: wine + small plates, easy energy pacing.</p>
+            <ul class="tips">
+              <li>Plan as walk-in; keep expectations flexible.</li>
+              <li>If busy, do one drink and keep schedule moving.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=The+Ten+Bells+247+Broome+St+New+York+NY+10002" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+          </div>
+
+          <div class="stop">
+            <div class="stop-time">6:00-ish</div>
+            <div class="stop-name">Reset at hotel</div>
+            <div class="stop-addr">Thompson Central Park New York, 119 W 56th St, New York, NY 10019</div>
+            <p class="stop-why">Warm reset window before the two fixed evening commitments.</p>
+            <ul class="tips">
+              <li>Use this block to recharge phone and switch layers.</li>
+              <li>Aim to depart by 8:00-8:10 to protect arrival buffer.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=Thompson+Central+Park+New+York+119+W+56th+St+New+York+NY+10019" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+          </div>
+
+          <div class="stop">
+            <div class="stop-time">8:40 arrival (9:00 show hard)</div>
+            <div class="stop-name">New York Comedy Club - Midtown</div>
+            <div class="stop-addr">241 E 24th St, New York, NY 10010</div>
+            <p class="stop-why">Hard commitment. Build cushion for check-in/seating.</p>
+            <ul class="tips">
+              <li>Venue note: NYCC also has East Village (85 E 4th St), but tonight target is Midtown.</li>
+              <li>Keep tickets ready before entering.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=New+York+Comedy+Club+Midtown+241+E+24th+St+New+York+NY+10010" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+          </div>
+
+          <div class="stop">
+            <div class="stop-time">10:45 reservation (hard)</div>
+            <div class="stop-name">Frank</div>
+            <div class="stop-addr">88 2nd Ave, New York, NY 10003</div>
+            <p class="stop-why">Straightforward post-show dinner move with predictable transfer.</p>
+            <ul class="tips">
+              <li>From NYCC Midtown, walking is about 20-25 minutes (or short ride if tight).</li>
+              <li>If show runs late, call ahead from the sidewalk.</li>
+            </ul>
+            <a class="maps-link" href="https://www.google.com/maps/search/?api=1&query=Frank+88+2nd+Ave+New+York+NY+10003" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Transit by major leg</h2>
+          <div class="split">
+            <div class="lane">
+              <h3>Hotel -> Brooklyn Bridge entrance</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> Walk to Columbus Circle area, take downtown train to City Hall/Brooklyn Bridge area, then short walk to the pedestrian approach.</li>
+                <li><strong>Uber-first:</strong> Direct to “Brooklyn Bridge Pedestrian Entrance near City Hall.”</li>
+              </ul>
+            </div>
+            <div class="lane">
+              <h3>DUMBO/Brooklyn Bridge Park -> Wall St/Pier 11</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> If ferry timing slips, use nearby subway back to Lower Manhattan (Wall St/Fulton area), then walk to Pier 11.</li>
+                <li><strong>Uber-first:</strong> Ride directly to “Pier 11 / Wall St, 11 South St.”</li>
+              </ul>
+            </div>
+            <div class="lane">
+              <h3>Pier 11/Wall St -> The Ten Bells</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> Short hop from Lower Manhattan toward Delancey/Essex, then walk to 247 Broome St.</li>
+                <li><strong>Uber-first:</strong> Direct ride to The Ten Bells.</li>
+              </ul>
+            </div>
+            <div class="lane">
+              <h3>The Ten Bells -> Hotel reset</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> Uptown train toward Midtown, then short walk to 119 W 56th St.</li>
+                <li><strong>Uber-first:</strong> Direct ride to Thompson Central Park New York.</li>
+              </ul>
+            </div>
+            <div class="lane">
+              <h3>Hotel -> NYCC Midtown</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> East-side route to 23rd/28th area, then walk to 241 E 24th St.</li>
+                <li><strong>Uber-first:</strong> Direct to New York Comedy Club Midtown.</li>
+              </ul>
+            </div>
+            <div class="lane">
+              <h3>NYCC Midtown -> Frank</h3>
+              <ul>
+                <li><strong>Subway-first:</strong> One quick downtown stop + short walk if you do not want to walk the full distance.</li>
+                <li><strong>Uber-first:</strong> Direct ride to 88 2nd Ave.</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Ferry details</h2>
+          <p class="muted">
+            Primary return target is <strong>DUMBO/Fulton Ferry -> Wall St/Pier 11</strong>. Use NYC Ferry app/live status before walking to the dock. If no clean departure window, fallback is walking back Manhattan-bound across the Brooklyn Bridge.
+          </p>
+          <div class="good" style="margin-top:8px;">
+            <h3>Primary</h3>
+            <ul>
+              <li>Departure context: DUMBO / Brooklyn Bridge Park area (DUMBO/Fulton Ferry landing).</li>
+              <li>Destination: Wall St/Pier 11 in Manhattan.</li>
+              <li>Check route and live vessel timing before committing.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>If we are running late</h2>
+          <div class="alert">
+            <h3>To make 8:40 arrival at comedy</h3>
+            <ul>
+              <li>Leave hotel by 8:05 latest.</li>
+              <li>If not out by 8:10, switch to direct Uber to NYCC Midtown.</li>
+            </ul>
+          </div>
+          <div class="alert" style="margin-top:8px;">
+            <h3>To make 10:45 at Frank</h3>
+            <ul>
+              <li>If show exits on time: walk (about 20-25 min).</li>
+              <li>If after 10:20: take a direct ride and call Frank with ETA update.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Consolidated map</h2>
+          <p class="muted">One link with stops in order: hotel -> bridge -> Pier 11/Wall St -> Ten Bells -> hotel -> comedy -> Frank.</p>
+          <div class="actions" style="margin-top:8px;">
+            <a id="all-stops-link" class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Frank,+88+2nd+Ave,+New+York,+NY+10003&waypoints=Brooklyn+Bridge+Pedestrian+Walkway+Entrance+near+City+Hall,+New+York,+NY|Pier+11+Wall+St,+11+South+St,+New+York,+NY+10004|The+Ten+Bells,+247+Broome+St,+New+York,+NY+10002|Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019|New+York+Comedy+Club+Midtown,+241+E+24th+St,+New+York,+NY+10010&travelmode=transit" target="_blank" rel="noopener noreferrer">Open all stops in Google Maps</a>
+            <button class="btn" id="copy-link-btn" type="button">Copy link</button>
+          </div>
+          <p class="small" id="copy-status">Copy this to share with friends.</p>
+        </article>
+
+        <article class="card">
+          <h2>Checklist</h2>
+          <ul class="tips">
+            <li>Layers + gloves + hat (bridge wind).</li>
+            <li>Portable charger + cable.</li>
+            <li>Comedy tickets ready before arrival.</li>
+            <li>Frank reservation time confirmed: 10:45pm.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Skip / Shorten if tired</h2>
+          <ul class="tips">
+            <li>Skip ferry and cross back directly (or rideshare) to reduce waiting complexity.</li>
+            <li>Do one quick glass/snack at Ten Bells instead of a full linger.</li>
+            <li>Leave hotel earlier and take Uber directly to comedy to protect the hard commitment.</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const copyBtn = document.getElementById('copy-link-btn');
+        const status = document.getElementById('copy-status');
+        const allStopsLink = document.getElementById('all-stops-link');
+
+        copyBtn.addEventListener('click', async function () {
+          try {
+            await navigator.clipboard.writeText(allStopsLink.href);
+            status.textContent = 'Link copied.';
+          } catch (err) {
+            status.textContent = 'Copy failed. Use the Open button instead.';
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
