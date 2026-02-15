@@ -100,7 +100,8 @@ test('Fixed tabs remain first and uploaded day appears after save with map href'
 
   assert.equal(tabs[0].id, 'friday');
   assert.equal(tabs[1].id, 'saturday');
-  assert.ok(tabs.slice(2).some((day) => day.id === saved.day.id));
+  assert.equal(tabs[2].id, 'sunday');
+  assert.ok(tabs.slice(3).some((day) => day.id === saved.day.id));
 
   const uploaded = tabs.find((day) => day.id === saved.day.id);
   assert.equal(uploaded.kind, 'uploaded');

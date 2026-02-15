@@ -1,11 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {
   FINAL_GOOGLE_MAPS_URL,
   FINALIZED_ITINERARY_PATCH,
   FINALIZED_STOP_ORDER,
   getGoogleMapsUrl,
 } from '../src/itinerary.js';
+
+const tripData = JSON.parse(fs.readFileSync(new URL('../public/nyc_trip_final.json', import.meta.url), 'utf8'));
 
 test('finalized stop order matches the expected sequence', () => {
   const stopIds = FINALIZED_ITINERARY_PATCH.stops.map((stop) => stop.id);
@@ -35,4 +38,36 @@ test('google maps one-tap url is the finalized multi-stop URL', () => {
   assert.match(FINAL_GOOGLE_MAPS_URL, /waypoints=Nordstrom/);
   assert.match(FINAL_GOOGLE_MAPS_URL, /The\+River/);
   assert.match(FINAL_GOOGLE_MAPS_URL, /Peking\+Duck\+House/);
+});
+
+test('friday includes Chinatown evening stops', () => {
+  const friday = tripData.days.find((day) => day.date === '2026-02-13');
+  assert.ok(friday, 'Missing Friday day');
+
+  const titles = friday.items.map((item) => item.title);
+  assert.ok(titles.includes('Drinks at The River'));
+  assert.ok(titles.includes('Dinner at Peking Duck House'));
+});
+
+test('saturday includes Roosevelt Island actuals and Frank dinner', () => {
+  const saturday = tripData.days.find((day) => day.date === '2026-02-14');
+  assert.ok(saturday, 'Missing Saturday day');
+
+  const titles = saturday.items.map((item) => item.title);
+  assert.ok(titles.includes('Roosevelt Island via Tram'));
+  assert.ok(titles.includes('Late dinner'));
+
+  const frankItem = saturday.items.find((item) => item.title === 'Late dinner');
+  const frankAddress = frankItem?.locations?.[0]?.address || '';
+  assert.match(frankAddress, /88 2nd Ave, New York, NY 10003/);
+});
+
+test('sunday includes Vineapple and tentative 2:00 split', () => {
+  const sunday = tripData.days.find((day) => day.date === '2026-02-15');
+  assert.ok(sunday, 'Missing Sunday day');
+
+  const titles = sunday.items.map((item) => item.title);
+  assert.ok(titles.includes('Brunch'));
+  assert.ok(titles.includes('Fiancées: Chicago (tentative)'));
+  assert.ok(titles.includes('You + Nathaniel hangout (tentative)'));
 });

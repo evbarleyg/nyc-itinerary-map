@@ -13,8 +13,15 @@ import {
   listDays,
   loadDayHistory,
   saveUploadedPath,
+  setFixedDays,
   setActiveDay,
 } from '../shared/day-history.js';
+import {
+  buildMapConfigFromDay,
+  getDayById,
+  getFixedDaysFromTrip,
+  loadTripData,
+} from '../shared/trip-data.js';
 import './styles.css';
 
 const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
@@ -480,8 +487,103 @@ const SATURDAY_ITINERARY = {
   zones: [],
 };
 
+const SATURDAY_ACTUALS_FALLBACK_ITINERARY = {
+  weatherNote: 'Saturday actuals: Roosevelt Island tram, Midtown stops, comedy, and Frank dinner.',
+  googleMapsUrl:
+    'https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Frank,+88+2nd+Ave,+New+York,+NY+10003&waypoints=Roosevelt+Island+Tramway+Manhattan+Plaza,+E+59th+St+%26+2nd+Ave,+New+York,+NY|FAO+Schwarz,+30+Rockefeller+Plaza,+New+York,+NY+10112|Aldo+Sohm+Wine+Bar,+151+W+51st+St,+New+York,+NY+10019|Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019|New+York+Comedy+Club+Midtown,+241+E+24th+St,+New+York,+NY+10010&travelmode=transit',
+  steps: [
+    { id: 'sat-act-step1', time: '14:45-16:15', title: 'Roosevelt Island via Tram', meta: 'Completed', color: '#3b7a57' },
+    { id: 'sat-act-step2', time: '16:15-16:45', title: 'Jellycat stop (FAO Schwarz)', meta: 'Completed', color: '#8d6f46' },
+    { id: 'sat-act-step3', time: '17:00-18:00', title: 'Aldo Sohm Wine Bar', meta: 'Completed', color: '#86543a' },
+    { id: 'sat-act-step4', time: '18:30-20:15', title: 'Hotel reset', meta: 'Completed', color: '#54758a' },
+    { id: 'sat-act-step5', time: '20:40-21:00', title: 'Arrive for show', meta: 'Completed', color: '#2f5d8a' },
+    { id: 'sat-act-step6', time: '21:00-22:30', title: 'Comedy show', meta: 'Completed', color: '#6d4d8f' },
+    { id: 'sat-act-step7', time: '22:45-23:59', title: 'Late dinner at Frank', meta: 'Completed', color: '#ad5d3b' },
+  ],
+  stops: [
+    {
+      id: 'sat-act-tram',
+      name: 'Roosevelt Island Tramway (Manhattan Tramway Plaza)',
+      time: '14:45',
+      address: 'E 59th St & 2nd Ave, New York, NY 10022',
+      note: 'Tram departure point.',
+      markerColor: '#3b7a57',
+      fallback: [40.761558, -73.964783],
+      stepIds: ['sat-act-step1'],
+    },
+    {
+      id: 'sat-act-ri',
+      name: 'Roosevelt Island',
+      time: '15:00-16:15',
+      address: 'Roosevelt Island, New York, NY 10044',
+      note: 'Promenade walk after tram.',
+      markerColor: '#3b7a57',
+      fallback: [40.761596, -73.949723],
+      stepIds: ['sat-act-step1', 'sat-act-step2'],
+    },
+    {
+      id: 'sat-act-fao',
+      name: 'FAO Schwarz',
+      time: '16:15-16:45',
+      address: '30 Rockefeller Plaza, New York, NY 10112',
+      note: 'Jellycat stop.',
+      markerColor: '#8d6f46',
+      fallback: [40.75874, -73.978674],
+      stepIds: ['sat-act-step2', 'sat-act-step3'],
+    },
+    {
+      id: 'sat-act-aldo',
+      name: 'Aldo Sohm Wine Bar',
+      time: '17:00-18:00',
+      address: '151 W 51st St, New York, NY 10019',
+      note: 'Selected Midtown wine bar.',
+      markerColor: '#86543a',
+      fallback: [40.761815, -73.981924],
+      stepIds: ['sat-act-step3', 'sat-act-step4'],
+    },
+    {
+      id: 'sat-act-hotel',
+      name: 'Thompson Central Park New York',
+      time: '18:30-20:15',
+      address: '119 W 56th St, New York, NY 10019',
+      note: 'Reset before evening commitments.',
+      markerColor: '#54758a',
+      fallback: [40.7643285, -73.978572],
+      stepIds: ['sat-act-step4', 'sat-act-step5'],
+    },
+    {
+      id: 'sat-act-nycc',
+      name: 'New York Comedy Club - Midtown',
+      time: '21:00-22:30',
+      address: '241 E 24th St, New York, NY 10010',
+      note: 'Comedy show.',
+      markerColor: '#6d4d8f',
+      fallback: [40.739145, -73.983551],
+      stepIds: ['sat-act-step5', 'sat-act-step6', 'sat-act-step7'],
+    },
+    {
+      id: 'sat-act-frank',
+      name: 'Frank',
+      time: '22:45-23:59',
+      address: '88 2nd Ave, New York, NY 10003',
+      note: 'Late dinner after show.',
+      markerColor: '#ad5d3b',
+      fallback: [40.727595, -73.987719],
+      stepIds: ['sat-act-step7'],
+    },
+  ],
+  staticPoints: [],
+  parkWaypoints: [],
+  routes: [],
+  zones: [],
+};
+
 const FRIDAY_BASE_ITINERARY = applyPatchToConfig(DEFAULT_ITINERARY, FINALIZED_ITINERARY_PATCH);
-const SATURDAY_BASE_ITINERARY = sanitizeConfig(SATURDAY_ITINERARY);
+const SATURDAY_BASE_ITINERARY = sanitizeConfig(SATURDAY_ACTUALS_FALLBACK_ITINERARY);
+const FALLBACK_FIXED_DAY_CONFIGS = new Map([
+  ['friday', FRIDAY_BASE_ITINERARY],
+  ['saturday', SATURDAY_BASE_ITINERARY],
+]);
 
 let activeConfig = deepClone(FRIDAY_BASE_ITINERARY);
 let activeRenderer = null;
@@ -491,6 +593,8 @@ let activeDayId = null;
 let activeDayPathGeoJSON = null;
 let activeDayMeta = null;
 let fridayPatch = null;
+let runtimeTripData = null;
+let fixedDayConfigById = new Map(FALLBACK_FIXED_DAY_CONFIGS);
 
 class LeafletRenderer {
   constructor(containerId) {
@@ -1124,10 +1228,22 @@ function buildUploadedDayConfig(day) {
   });
 }
 
+function getFridayBaseConfig() {
+  const fromRuntime = fixedDayConfigById.get('friday');
+  return fromRuntime || FRIDAY_BASE_ITINERARY;
+}
+
 function getConfigForDay(dayId, dayMeta) {
-  if (dayId === 'saturday') return deepClone(SATURDAY_BASE_ITINERARY);
+  if (fixedDayConfigById.has(dayId)) {
+    const base = fixedDayConfigById.get(dayId);
+    if (dayId === 'friday') {
+      return applyPatchToConfig(base, fridayPatch || buildDefaultPatchTemplate(base));
+    }
+    return deepClone(base);
+  }
   if (dayId === 'friday') {
-    return applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch || buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY));
+    const base = getFridayBaseConfig();
+    return applyPatchToConfig(base, fridayPatch || buildDefaultPatchTemplate(base));
   }
   return buildUploadedDayConfig(dayMeta);
 }
@@ -1175,7 +1291,7 @@ function renderDayTabs() {
 }
 
 async function refreshActiveDayPath() {
-  if (!activeDayId || activeDayId === 'friday' || activeDayId === 'saturday') {
+  if (!activeDayId || activeDayMeta?.kind === 'fixed') {
     activeDayPathGeoJSON = null;
     return;
   }
@@ -1345,14 +1461,31 @@ function buildGeometry(config, stopsById, staticPointsById) {
 
   const parkWaypointsById = new Map(parkWaypoints.map((waypoint) => [waypoint.id, waypoint]));
 
+  function getRouteStopCoords(route) {
+    if (!route?.fromStopId || !route?.toStopId) return [];
+    const from = getCoordById(stopsById, route.fromStopId);
+    const to = getCoordById(stopsById, route.toStopId);
+    if (!from || !to) return [];
+
+    const vias = (Array.isArray(route.viaStopIds) ? route.viaStopIds : [])
+      .map((stopId) => getCoordById(stopsById, stopId))
+      .filter((coord) => Boolean(coord));
+
+    return normalizeCoordList([from, ...vias, to]);
+  }
+
   const routes = config.routes
     .filter((route) => !route.hidden)
     .map((route) => {
       const fallbackColor = getStepColor(config, route.stepIds?.[0], '#557083');
       const customCoords = normalizeCoordList(route.coords);
-      const coords = customCoords.length >= 2
-        ? customCoords
-        : defaultRouteCoords(route.id, stopsById, staticPointsById, parkWaypointsById);
+      const stopLinkCoords = getRouteStopCoords(route);
+      const coords =
+        customCoords.length >= 2
+          ? customCoords
+          : stopLinkCoords.length >= 2
+            ? stopLinkCoords
+            : defaultRouteCoords(route.id, stopsById, staticPointsById, parkWaypointsById);
 
       if (coords.length < 2) return null;
 
@@ -1709,8 +1842,9 @@ async function applyEditorPatch() {
 
   try {
     const patch = readEditorPatch();
+    const fridayBase = getFridayBaseConfig();
     fridayPatch = patch;
-    activeConfig = applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch);
+    activeConfig = applyPatchToConfig(fridayBase, fridayPatch);
     storePatch(patch);
     await renderMap(activeConfig);
     setStatus('Updates applied. Map redrawn from editor JSON.');
@@ -1725,11 +1859,12 @@ async function resetEditorTemplate() {
     return;
   }
 
-  const patch = buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY);
+  const fridayBase = getFridayBaseConfig();
+  const patch = buildDefaultPatchTemplate(fridayBase);
   setEditorPatch(patch);
   storePatch(patch);
   fridayPatch = patch;
-  activeConfig = applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch);
+  activeConfig = applyPatchToConfig(fridayBase, fridayPatch);
   await renderMap(activeConfig);
   setStatus('Editor reset to default itinerary template.');
 }
@@ -1770,12 +1905,63 @@ function wireEvents() {
   wireDayHistoryUi();
 }
 
+function getFallbackFixedDays() {
+  return [
+    {
+      id: 'friday',
+      title: 'Friday',
+      date: '2026-02-13',
+      kind: 'fixed',
+      href: '/?day=friday',
+      hasPath: false,
+    },
+    {
+      id: 'saturday',
+      title: 'Saturday',
+      date: '2026-02-14',
+      kind: 'fixed',
+      href: '/?day=saturday',
+      hasPath: false,
+    },
+  ];
+}
+
+async function initializeTripFixedDays() {
+  fixedDayConfigById = new Map(FALLBACK_FIXED_DAY_CONFIGS);
+
+  try {
+    runtimeTripData = await loadTripData();
+    const fixedDays = getFixedDaysFromTrip(runtimeTripData);
+    const runtimeConfigs = new Map();
+
+    for (const fixedDay of fixedDays) {
+      const tripDay = getDayById(runtimeTripData, fixedDay.id);
+      const runtimeConfig = tripDay ? buildMapConfigFromDay(tripDay, runtimeTripData) : null;
+      if (!runtimeConfig) continue;
+      runtimeConfigs.set(fixedDay.id, sanitizeConfig(runtimeConfig));
+    }
+
+    fixedDayConfigById = new Map([...FALLBACK_FIXED_DAY_CONFIGS, ...runtimeConfigs]);
+    const fixedTabs = fixedDays.filter((day) => fixedDayConfigById.has(day.id));
+    setFixedDays(fixedTabs);
+    return true;
+  } catch (error) {
+    runtimeTripData = null;
+    fixedDayConfigById = new Map(FALLBACK_FIXED_DAY_CONFIGS);
+    setFixedDays(getFallbackFixedDays());
+    setDayHistoryStatus(`Trip JSON unavailable. Using fallback data: ${error.message}`);
+    return false;
+  }
+}
+
 async function init() {
   wireEvents();
+  await initializeTripFixedDays();
   loadDayHistory();
 
   const storedPatch = getStoredPatch();
-  fridayPatch = storedPatch || buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY);
+  const fridayBase = getFridayBaseConfig();
+  fridayPatch = storedPatch || buildDefaultPatchTemplate(fridayBase);
   setEditorPatch(fridayPatch);
 
   const queryDay = new URLSearchParams(window.location.search).get('day')?.trim();

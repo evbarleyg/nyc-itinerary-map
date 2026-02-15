@@ -18,7 +18,7 @@ Then open `http://localhost:8000/saturday/`.
 2. Edit stop content in the `Stops` card block (name, address, time, notes).
 3. Edit transport language in `Transit by major leg`.
 4. Update the consolidated route URL in the `Consolidated map` section (anchor with `id="all-stops-link"`).
-5. Day tabs/upload UI is near the top (`id="day-tabs"` and `id="upload-day-path-btn"`). Uploaded days link back to `/?day=<dayId>` on the root map page.
+5. Day tabs/upload UI is near the top (`id="day-tabs"` and `id="upload-day-path-btn"`). Fixed Friday/Saturday/Sunday tabs and uploaded days link back to `/?day=<dayId>` on the root map page.
 
 ## iPhone upload notes
 

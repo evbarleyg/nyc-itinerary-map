@@ -9,7 +9,8 @@ Single-page map app for today's NYC itinerary with:
 - PNG export of current map view
 - Shared day tabs across `/` and `/saturday/`
 - iPhone day-path upload (`GPX`, `KML`, `GeoJSON`) with local-only persistence
-- Single-page day selectors on `/` (Friday, Saturday, uploaded days)
+- Single-page day selectors on `/` (Friday, Saturday Actuals, Sunday, uploaded days)
+- Runtime fixed-day source from `public/nyc_trip_final.json`
 
 ## Run
 
@@ -46,12 +47,13 @@ Use `Open in Google Maps` in the left panel to launch the full multi-stop route.
 
 ## Day Tabs + iPhone Path Upload
 
-- Top tabs always include fixed `Friday` and `Saturday`, plus any uploaded days.
+- Top tabs include fixed `Friday`, `Saturday`, and `Sunday`, plus any uploaded days.
 - Upload from iPhone Files using `Upload Day Path` (`.gpx`, `.kml`, `.geojson`, `.json`).
 - Uploaded path geometry is stored locally on your device/browser:
   - metadata/order/active day in `localStorage` key `nyc_day_history_meta_v1`
   - path geometry in IndexedDB `nyc_day_history_paths_v1`
 - Open an uploaded day directly on map with `/?day=<dayId>`.
+- Fixed-day tabs on `/` are loaded from `public/nyc_trip_final.json` via `shared/trip-data.js`.
 - If site data is cleared in Safari/browser settings, uploaded day history is removed.
 
 ## Validate

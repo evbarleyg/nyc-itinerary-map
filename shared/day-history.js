@@ -4,7 +4,7 @@ const PATH_STORE_NAME = 'paths';
 const META_VERSION = 1;
 
 const DEFAULT_ACTIVE_DAY = 'friday';
-const FIXED_DAYS = Object.freeze([
+const DEFAULT_FIXED_DAYS = Object.freeze([
   {
     id: 'friday',
     title: 'Friday',
@@ -18,11 +18,20 @@ const FIXED_DAYS = Object.freeze([
     title: 'Saturday',
     date: '2026-02-14',
     kind: 'fixed',
-    href: '/saturday/',
+    href: '/?day=saturday',
+    hasPath: false,
+  },
+  {
+    id: 'sunday',
+    title: 'Sunday',
+    date: '2026-02-15',
+    kind: 'fixed',
+    href: '/?day=sunday',
     hasPath: false,
   },
 ]);
 
+let fixedDays = DEFAULT_FIXED_DAYS.map((day) => ({ ...day }));
 let memoryMeta = null;
 let memoryPathStore = new Map();
 
@@ -66,7 +75,7 @@ function normalizeUploadedDay(day) {
   if (!day || typeof day !== 'object') return null;
 
   const id = normalizeText(day.id);
-  if (!id || id === 'friday' || id === 'saturday') return null;
+  if (!id || getFixedDayIds().has(id)) return null;
 
   const date = isIsoDay(day.date) ? day.date : '';
   const title = normalizeText(day.title) || (date ? `Day ${date}` : 'Uploaded Day');
@@ -91,15 +100,60 @@ function createDefaultMeta() {
   };
 }
 
+function normalizeFixedDay(day) {
+  if (!day || typeof day !== 'object') return null;
+
+  const id = normalizeText(day.id);
+  if (!id) return null;
+
+  const title = normalizeText(day.title) || id;
+  const date = isIsoDay(day.date) ? day.date : '';
+  const href = normalizeText(day.href) || `/?day=${encodeURIComponent(id)}`;
+
+  return {
+    id,
+    title,
+    date,
+    kind: 'fixed',
+    href,
+    hasPath: false,
+  };
+}
+
+function cloneFixedDays(days) {
+  const source = Array.isArray(days) ? days : DEFAULT_FIXED_DAYS;
+  const normalized = [];
+  const seen = new Set();
+
+  for (const day of source) {
+    const fixed = normalizeFixedDay(day);
+    if (!fixed || seen.has(fixed.id)) continue;
+    seen.add(fixed.id);
+    normalized.push(fixed);
+  }
+
+  if (normalized.length === 0) {
+    return DEFAULT_FIXED_DAYS.map((day) => ({ ...day }));
+  }
+
+  return normalized;
+}
+
+function getFixedDayIds() {
+  return new Set(fixedDays.map((day) => day.id));
+}
+
 function sanitizeMeta(meta) {
   const base = createDefaultMeta();
   const safe = meta && typeof meta === 'object' ? meta : {};
   const uploadedRaw = Array.isArray(safe.uploadedDays) ? safe.uploadedDays : [];
   const uploadedDays = sortUploadedDays(uploadedRaw.map((item) => normalizeUploadedDay(item)).filter(Boolean));
 
-  const availableIds = new Set([...FIXED_DAYS.map((day) => day.id), ...uploadedDays.map((day) => day.id)]);
+  const availableIds = new Set([...fixedDays.map((day) => day.id), ...uploadedDays.map((day) => day.id)]);
   const requestedActive = normalizeText(safe.activeDayId);
-  const activeDayId = availableIds.has(requestedActive) ? requestedActive : DEFAULT_ACTIVE_DAY;
+  const fallbackActiveId =
+    availableIds.has(DEFAULT_ACTIVE_DAY) ? DEFAULT_ACTIVE_DAY : (fixedDays[0]?.id || DEFAULT_ACTIVE_DAY);
+  const activeDayId = availableIds.has(requestedActive) ? requestedActive : fallbackActiveId;
 
   return {
     version: META_VERSION,
@@ -153,7 +207,7 @@ function writeMeta(meta) {
 }
 
 function getAllDayIds(meta = readMeta()) {
-  const ids = new Set(FIXED_DAYS.map((item) => item.id));
+  const ids = new Set(fixedDays.map((item) => item.id));
   for (const day of meta.uploadedDays) ids.add(day.id);
   return ids;
 }
@@ -167,7 +221,7 @@ function getUploadedDays(meta = readMeta()) {
 }
 
 function getTabs(meta = readMeta()) {
-  const fixed = FIXED_DAYS.map((day) => ({ ...day }));
+  const fixed = fixedDays.map((day) => ({ ...day }));
   return [...fixed, ...getUploadedDays(meta)];
 }
 
@@ -596,15 +650,22 @@ export function listDays() {
 
 export async function getDayPathGeoJSON(dayId) {
   const id = normalizeText(dayId);
-  if (!id || id === 'friday' || id === 'saturday') return null;
+  if (!id || getFixedDayIds().has(id)) return null;
   return readPath(id);
 }
 
 export function getFixedDays() {
-  return FIXED_DAYS.map((day) => ({ ...day }));
+  return fixedDays.map((day) => ({ ...day }));
+}
+
+export function setFixedDays(days) {
+  fixedDays = cloneFixedDays(days);
+  const nextMeta = writeMeta(readMeta());
+  return getTabs(nextMeta);
 }
 
 export function __resetDayHistoryForTests() {
+  fixedDays = DEFAULT_FIXED_DAYS.map((day) => ({ ...day }));
   memoryMeta = createDefaultMeta();
   memoryPathStore = new Map();
   const storage = getStorage();

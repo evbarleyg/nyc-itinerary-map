@@ -590,7 +590,7 @@
         function getDayHref(day) {
           if (day.kind === "uploaded") return siteBasePath + "?day=" + encodeURIComponent(day.id);
           if (day.id === "saturday") return siteBasePath + "saturday/";
-          return siteBasePath;
+          return siteBasePath + "?day=" + encodeURIComponent(day.id);
         }
 
         function setStatus(message) {
@@ -633,14 +633,17 @@
                 return;
               }
 
-              if (day.id === "friday") {
-                event.preventDefault();
-                setActiveDay("friday");
-                window.location.href = siteBasePath;
+              if (day.id === "saturday") {
+                setActiveDay("saturday");
                 return;
               }
 
-              setActiveDay("saturday");
+              if (day.kind === "fixed") {
+                event.preventDefault();
+                setActiveDay(day.id);
+                window.location.href = siteBasePath + "?day=" + encodeURIComponent(day.id);
+                return;
+              }
             });
 
             tabsContainer.appendChild(link);
