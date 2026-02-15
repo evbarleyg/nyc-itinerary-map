@@ -23,11 +23,16 @@ test('key time blocks are explicit and precise', () => {
   assert.equal(timeByStep.get('step6'), '14:00');
   assert.equal(timeByStep.get('step7'), '15:30+');
   assert.equal(timeByStep.get('step8'), '17:00');
+  assert.equal(timeByStep.get('step9'), '19:15-20:45');
+  assert.equal(timeByStep.get('step10'), '21:00-22:25');
+  assert.equal(timeByStep.get('step11'), '22:30-23:05');
 });
 
 test('google maps one-tap url is the finalized multi-stop URL', () => {
   assert.equal(getGoogleMapsUrl(FINALIZED_ITINERARY_PATCH), FINAL_GOOGLE_MAPS_URL);
   assert.match(FINAL_GOOGLE_MAPS_URL, /origin=Thompson\+Central\+Park\+New\+York/);
-  assert.match(FINAL_GOOGLE_MAPS_URL, /destination=Gansevoort\+St\+%26\+Washington\+St/);
+  assert.match(FINAL_GOOGLE_MAPS_URL, /destination=Thompson\+Central\+Park\+New\+York/);
   assert.match(FINAL_GOOGLE_MAPS_URL, /waypoints=Nordstrom/);
+  assert.match(FINAL_GOOGLE_MAPS_URL, /The\+River/);
+  assert.match(FINAL_GOOGLE_MAPS_URL, /Peking\+Duck\+House/);
 });

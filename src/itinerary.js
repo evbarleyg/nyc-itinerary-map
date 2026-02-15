@@ -1,5 +1,5 @@
 export const FINAL_GOOGLE_MAPS_URL =
-  'https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Gansevoort+St+%26+Washington+St,+New+York,+NY+10014&waypoints=Nordstrom,+225+W+57th+St,+New+York,+NY+10019|Central+Park+59th+St+Entrance,+New+York,+NY|EJ%27s+Luncheonette,+1271+3rd+Ave,+New+York,+NY+10021|The+Frick+Collection,+1+E+70th+St,+New+York,+NY+10021|Ci+Siamo,+440+W+33rd+St,+New+York,+NY+10001|High+Line+Hudson+Yards+Entrance,+New+York,+NY&travelmode=walking';
+  'https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&waypoints=Nordstrom,+225+W+57th+St,+New+York,+NY+10019|Central+Park+59th+St+Entrance,+New+York,+NY|EJ%27s+Luncheonette,+1271+3rd+Ave,+New+York,+NY+10021|The+Frick+Collection,+1+E+70th+St,+New+York,+NY+10021|Ci+Siamo,+440+W+33rd+St,+New+York,+NY+10001|High+Line+Hudson+Yards+Entrance,+New+York,+NY|Gansevoort+St+%26+Washington+St,+New+York,+NY+10014|The+River,+102+Bayard+St,+New+York,+NY+10013|Peking+Duck+House,+28+Mott+St,+New+York,+NY+10013&travelmode=walking';
 export const ITINERARY_DATE = '2026-02-13';
 
 export const FINALIZED_STOP_ORDER = [
@@ -11,12 +11,15 @@ export const FINALIZED_STOP_ORDER = [
   'cisiamo',
   'highline-start',
   'drinks-anchor',
+  'river',
+  'peking',
+  'hotel-return',
 ];
 
 export const FINALIZED_ITINERARY_PATCH = {
   googleMapsUrl: FINAL_GOOGLE_MAPS_URL,
   weatherNote:
-    'Cold but sunny day. Route order: Midtown -> Upper East Side -> Hudson Yards/Midtown West -> Chelsea/Meatpacking.',
+    'Cold but sunny day. Route order: Midtown -> Upper East Side -> Hudson Yards/Midtown West -> Chelsea/Meatpacking -> Chinatown -> Midtown return.',
   steps: [
     {
       id: 'step1',
@@ -73,6 +76,27 @@ export const FINALIZED_ITINERARY_PATCH = {
       title: 'Drinks anchor',
       meta: 'Gansevoort & Washington (Chelsea/Meatpacking)',
       color: '#b95f3c',
+    },
+    {
+      id: 'step9',
+      time: '19:15-20:45',
+      title: 'Drinks: The River (Chinatown)',
+      meta: 'Evening Chinatown drinks stop',
+      color: '#86543a',
+    },
+    {
+      id: 'step10',
+      time: '21:00-22:25',
+      title: 'Dinner: Peking Duck House',
+      meta: 'Chinatown dinner block',
+      color: '#9b643f',
+    },
+    {
+      id: 'step11',
+      time: '22:30-23:05',
+      title: 'Return to Hotel',
+      meta: 'Back to Thompson Central Park New York',
+      color: '#5e6f87',
     },
   ],
   stops: [
@@ -154,7 +178,37 @@ export const FINALIZED_ITINERARY_PATCH = {
       note: 'Chelsea/Meatpacking meetup anchor.',
       markerColor: '#b95f3c',
       fallback: [40.7392395, -74.0081111],
-      stepIds: ['step8'],
+      stepIds: ['step8', 'step9'],
+    },
+    {
+      id: 'river',
+      name: 'The River',
+      time: '19:15-20:45',
+      address: '102 Bayard St, New York, NY 10013',
+      note: 'Chinatown cocktail stop.',
+      markerColor: '#86543a',
+      fallback: [40.715962, -73.998309],
+      stepIds: ['step9', 'step10'],
+    },
+    {
+      id: 'peking',
+      name: 'Peking Duck House',
+      time: '21:00-22:25',
+      address: '28 Mott St, New York, NY 10013',
+      note: 'Dinner stop in Chinatown.',
+      markerColor: '#9b643f',
+      fallback: [40.714686, -73.998527],
+      stepIds: ['step10', 'step11'],
+    },
+    {
+      id: 'hotel-return',
+      name: 'Thompson Central Park New York (Return)',
+      time: '22:30-23:05',
+      address: '119 W 56th St, New York, NY 10019',
+      note: 'End-of-day return to hotel.',
+      markerColor: '#5e6f87',
+      fallback: [40.7643285, -73.978572],
+      stepIds: ['step11'],
     },
   ],
   staticPoints: [
@@ -297,6 +351,48 @@ export const FINALIZED_ITINERARY_PATCH = {
         [40.74207, -74.00527],
         [40.74095, -74.00721],
         [40.7392395, -74.0081111],
+      ],
+    },
+    {
+      id: 'routeG',
+      name: 'Transit/Ride: Meatpacking -> The River',
+      time: '18:30-19:15',
+      note: 'Evening transfer from Chelsea/Meatpacking to Chinatown.',
+      stepIds: ['step9'],
+      color: '#86543a',
+      dashed: true,
+      coords: [
+        [40.7392395, -74.0081111],
+        [40.72786, -74.00194],
+        [40.715962, -73.998309],
+      ],
+    },
+    {
+      id: 'routeH',
+      name: 'Walk: The River -> Peking Duck House',
+      time: '20:45-21:00',
+      note: 'Short Chinatown walk to dinner.',
+      stepIds: ['step10'],
+      color: '#9b643f',
+      dashed: false,
+      coords: [
+        [40.715962, -73.998309],
+        [40.714686, -73.998527],
+      ],
+    },
+    {
+      id: 'routeI',
+      name: 'Transit/Ride: Peking Duck House -> Hotel',
+      time: '22:30-23:05',
+      note: 'Return uptown to Thompson Central Park New York.',
+      stepIds: ['step11'],
+      color: '#5e6f87',
+      dashed: true,
+      coords: [
+        [40.714686, -73.998527],
+        [40.73762, -73.99215],
+        [40.75621, -73.98488],
+        [40.7643285, -73.978572],
       ],
     },
   ],
