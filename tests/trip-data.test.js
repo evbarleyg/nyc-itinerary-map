@@ -77,17 +77,16 @@ test('Sunday tentative split and open-ended dinner are retained', async () => {
     assert.equal(tentativeTwoPm.length, 2);
     assert.ok(tentativeTwoPm.every((item) => item.status === 'tentative'));
 
-    const dinner = sunday.items.find((item) => item.title === 'Dinner after (tentative)');
-    assert.ok(dinner, 'Missing tentative dinner item');
+    const dinner = sunday.items.find((item) => item.title === 'Dinner: Pastis');
+    assert.ok(dinner, 'Missing Pastis dinner item');
     assert.equal(dinner.end_time, null);
+    assert.equal(dinner.locations?.[0]?.address, '52 Gansevoort St, New York, NY 10014');
 
     const config = buildMapConfigFromDay(sunday, trip);
     const stepMeta = config.steps.map((step) => step.meta).join(' | ');
     assert.match(stepMeta, /Tentative/);
-    assert.equal(
-      config.routes.some((route) => /Fiancées: Chicago \(tentative\) -> You \+ Nathaniel hangout \(tentative\)/.test(route.name)),
-      false,
-      'Parallel 2:00 tentative blocks should not be linked as a forced sequence',
-    );
+    assert.ok(config.routes.some((route) => /Branch A: Vineapple -> Maci Broadway/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Branch B: Vineapple -> Nathaniel hangout/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Transfer: Broadway -> Pastis dinner/.test(route.name)));
   });
 });

@@ -1406,6 +1406,7 @@ function wireDayHistoryUi() {
 
 function wireViewModeUi() {
   const toggle = document.getElementById('show-full-day-toggle');
+  const resetButton = document.getElementById('reset-view-mode-btn');
   syncViewModeUi();
 
   toggle?.addEventListener('change', () => {
@@ -1415,6 +1416,12 @@ function wireViewModeUi() {
       return;
     }
     setStatus('Step focus mode enabled. Click a time block to focus a segment.');
+  });
+
+  resetButton?.addEventListener('click', () => {
+    setFullDayPathMode(true);
+    activeRenderer?.fitToData();
+    setStatus('Reset to full day path view.');
   });
 }
 

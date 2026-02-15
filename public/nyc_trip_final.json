@@ -1,7 +1,7 @@
 {
   "trip_name": "NYC Weekend",
   "timezone": "America/New_York",
-  "last_updated": "2026-02-15T10:40:00-05:00",
+  "last_updated": "2026-02-15T14:15:00-05:00",
   "days": [
     {
       "date": "2026-02-13",
@@ -305,7 +305,7 @@
     },
     {
       "date": "2026-02-15",
-      "title": "Sunday tentative: Bridge + Vineapple + 2:00 split + dinner after",
+      "title": "Sunday tentative: Bridge + Vineapple + Broadway + Pastis",
       "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
       "items": [
         {
@@ -357,13 +357,13 @@
         {
           "start_time": "14:00",
           "end_time": "16:30",
-          "title": "Fiancées: Chicago (tentative)",
+          "title": "Maci: Broadway show",
           "type": "event",
           "status": "tentative",
-          "notes": "Best-guess Broadway plan while split up.",
+          "notes": "Maci at Chicago on Broadway (tentative timing).",
           "locations": [
             {
-              "name": "Ambassador Theatre",
+              "name": "Ambassador Theatre (Chicago on Broadway)",
               "address": "219 W 49th St, New York, NY 10019"
             }
           ]
@@ -385,14 +385,14 @@
         {
           "start_time": "18:30",
           "end_time": null,
-          "title": "Dinner after (tentative)",
+          "title": "Dinner: Pastis",
           "type": "dining",
           "status": "tentative",
-          "notes": "Dinner together after afternoon split.",
+          "notes": "Dinner together at Pastis after Broadway and afternoon split.",
           "locations": [
             {
-              "name": "Dinner TBD (Theater District)",
-              "address": "Theater District, New York, NY 10036"
+              "name": "Pastis",
+              "address": "52 Gansevoort St, New York, NY 10014"
             }
           ]
         }

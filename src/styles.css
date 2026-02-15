@@ -195,6 +195,22 @@ body {
   accent-color: #2e6d8d;
 }
 
+.view-mode-reset-btn {
+  appearance: none;
+  border: 1px solid #b8cad8;
+  border-radius: 999px;
+  background: #f4f9fc;
+  color: #2f5f79;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.view-mode-reset-btn:hover {
+  background: #e9f3f9;
+}
+
 .view-mode-label {
   font-size: 0.76rem;
   color: #5a6c79;

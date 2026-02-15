@@ -67,6 +67,7 @@ const KNOWN_COORDS = new Map(
     '71 pineapple st, brooklyn, ny 11201': [40.695694, -73.994334],
     '219 w 49th st, new york, ny 10019': [40.76047, -73.983921],
     'bryant park, new york, ny 10018': [40.753597, -73.983233],
+    '52 gansevoort st, new york, ny 10014': [40.739908, -74.005786],
     'theater district, new york, ny 10036': [40.7594, -73.9851],
     '11 south st, new york, ny 10004': [40.703245, -74.005938],
     vineapple: [40.695694, -73.994334],
@@ -77,6 +78,7 @@ const KNOWN_COORDS = new Map(
     'fao schwarz': [40.75874, -73.978674],
     'aldo sohm wine bar': [40.761815, -73.981924],
     'roosevelt island tramway (manhattan tramway plaza)': [40.761558, -73.964783],
+    pastis: [40.739908, -74.005786],
   }),
 );
 
@@ -283,6 +285,7 @@ function makeRoute({
   fromStopId,
   toStopId,
   viaStopIds = [],
+  coords = [],
 }) {
   return {
     id,
@@ -295,7 +298,331 @@ function makeRoute({
     fromStopId,
     toStopId,
     viaStopIds,
+    coords,
   };
+}
+
+function findStepByTitle(stepStops, pattern) {
+  return stepStops.find((step) => pattern.test(normalizeText(step.stepTitle).toLowerCase())) || null;
+}
+
+function firstStopId(step) {
+  return step?.stopIds?.[0] || '';
+}
+
+function lastStopId(step) {
+  const stopIds = asArray(step?.stopIds);
+  return stopIds[stopIds.length - 1] || '';
+}
+
+function buildSaturdayCuratedRoutes(stepStops) {
+  const tramStep = findStepByTitle(stepStops, /roosevelt island via tram/);
+  const faoStep = findStepByTitle(stepStops, /jellycat stop|fao schwarz/);
+  const wineStep = findStepByTitle(stepStops, /aldo sohm|midtown wine bar/);
+  const hotelStep = findStepByTitle(stepStops, /hotel reset/);
+  const arriveStep = findStepByTitle(stepStops, /arrive for show/);
+  const comedyStep = findStepByTitle(stepStops, /comedy show/);
+  const dinnerStep = findStepByTitle(stepStops, /late dinner|frank/);
+
+  const routes = [];
+
+  if (tramStep && firstStopId(tramStep) && lastStopId(tramStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-tram',
+        name: 'Roosevelt Island Tram',
+        time: tramStep.time,
+        note: 'Tram ride and Roosevelt Island promenade segment.',
+        stepId: tramStep.stepId,
+        color: tramStep.color,
+        dashed: false,
+        fromStopId: firstStopId(tramStep),
+        toStopId: lastStopId(tramStep),
+        coords: [
+          [40.761558, -73.964783],
+          [40.7609, -73.9587],
+          [40.761596, -73.949723],
+        ],
+      }),
+    );
+  }
+
+  if (tramStep && faoStep && lastStopId(tramStep) && firstStopId(faoStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-tram-to-fao',
+        name: 'Transfer: Roosevelt Island -> FAO Schwarz',
+        time: `${tramStep.time} -> ${faoStep.time}`,
+        note: 'Return by tram then Midtown transfer.',
+        stepId: faoStep.stepId,
+        color: faoStep.color,
+        dashed: true,
+        fromStopId: lastStopId(tramStep),
+        toStopId: firstStopId(faoStep),
+        coords: [
+          [40.761596, -73.949723],
+          [40.761558, -73.964783],
+          [40.75874, -73.978674],
+        ],
+      }),
+    );
+  }
+
+  if (faoStep && wineStep && firstStopId(faoStep) && firstStopId(wineStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-fao-to-wine',
+        name: 'Transfer: FAO Schwarz -> Aldo Sohm Wine Bar',
+        time: `${faoStep.time} -> ${wineStep.time}`,
+        note: 'Short Midtown walk.',
+        stepId: wineStep.stepId,
+        color: wineStep.color,
+        dashed: false,
+        fromStopId: firstStopId(faoStep),
+        toStopId: firstStopId(wineStep),
+        coords: [
+          [40.75874, -73.978674],
+          [40.76045, -73.98035],
+          [40.761815, -73.981924],
+        ],
+      }),
+    );
+  }
+
+  if (wineStep && hotelStep && firstStopId(wineStep) && firstStopId(hotelStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-wine-to-hotel',
+        name: 'Transfer: Aldo Sohm Wine Bar -> Hotel reset',
+        time: `${wineStep.time} -> ${hotelStep.time}`,
+        note: 'Return to hotel to reset.',
+        stepId: hotelStep.stepId,
+        color: hotelStep.color,
+        dashed: false,
+        fromStopId: firstStopId(wineStep),
+        toStopId: firstStopId(hotelStep),
+        coords: [
+          [40.761815, -73.981924],
+          [40.76315, -73.98015],
+          [40.7643285, -73.978572],
+        ],
+      }),
+    );
+  }
+
+  if (hotelStep && arriveStep && firstStopId(hotelStep) && firstStopId(arriveStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-hotel-to-nycc',
+        name: 'Transfer: Hotel -> Comedy Club arrival',
+        time: `${hotelStep.time} -> ${arriveStep.time}`,
+        note: 'Evening transfer to NYCC Midtown.',
+        stepId: arriveStep.stepId,
+        color: arriveStep.color,
+        dashed: true,
+        fromStopId: firstStopId(hotelStep),
+        toStopId: firstStopId(arriveStep),
+        coords: [
+          [40.7643285, -73.978572],
+          [40.7558, -73.986],
+          [40.739145, -73.983551],
+        ],
+      }),
+    );
+  }
+
+  if (comedyStep && dinnerStep && firstStopId(comedyStep) && firstStopId(dinnerStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-comedy-to-dinner',
+        name: 'Transfer: Comedy -> Frank',
+        time: `${comedyStep.time} -> ${dinnerStep.time}`,
+        note: 'Post-show walk to dinner.',
+        stepId: dinnerStep.stepId,
+        color: dinnerStep.color,
+        dashed: false,
+        fromStopId: firstStopId(comedyStep),
+        toStopId: firstStopId(dinnerStep),
+        coords: [
+          [40.739145, -73.983551],
+          [40.7348, -73.9857],
+          [40.727595, -73.987719],
+        ],
+      }),
+    );
+  }
+
+  return routes;
+}
+
+function buildSundayCuratedRoutes(stepStops) {
+  const subwayStep = findStepByTitle(stepStops, /subway to brooklyn bridge/);
+  const bridgeStep = findStepByTitle(stepStops, /walk brooklyn bridge/);
+  const brunchStep = findStepByTitle(stepStops, /brunch/);
+  const maciStep = findStepByTitle(stepStops, /maci|broadway/);
+  const nathanielStep = findStepByTitle(stepStops, /nathaniel/);
+  const dinnerStep = findStepByTitle(stepStops, /pastis|dinner/);
+
+  const routes = [];
+
+  if (subwayStep && bridgeStep && firstStopId(subwayStep) && firstStopId(bridgeStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-subway-to-bridge',
+        name: 'Transfer: Subway -> Brooklyn Bridge entrance',
+        time: `${subwayStep.time} -> ${bridgeStep.time}`,
+        note: 'Short handoff from station to bridge walkway.',
+        stepId: bridgeStep.stepId,
+        color: bridgeStep.color,
+        dashed: true,
+        fromStopId: firstStopId(subwayStep),
+        toStopId: firstStopId(bridgeStep),
+        coords: [
+          [40.713065, -74.004131],
+          [40.712628, -74.00528],
+        ],
+      }),
+    );
+  }
+
+  if (bridgeStep && firstStopId(bridgeStep) && lastStopId(bridgeStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-bridge-walk',
+        name: 'Walk: Brooklyn Bridge',
+        time: bridgeStep.time,
+        note: 'Curated Manhattan-to-Brooklyn bridge walking line.',
+        stepId: bridgeStep.stepId,
+        color: bridgeStep.color,
+        dashed: false,
+        fromStopId: firstStopId(bridgeStep),
+        toStopId: lastStopId(bridgeStep),
+        coords: [
+          [40.712628, -74.00528],
+          [40.70675, -74.00371],
+          [40.70402, -73.99943],
+          [40.699216, -73.997027],
+        ],
+      }),
+    );
+  }
+
+  if (bridgeStep && brunchStep && lastStopId(bridgeStep) && firstStopId(brunchStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-bridge-to-brunch',
+        name: 'Transfer: Bridge -> Vineapple',
+        time: `${bridgeStep.time} -> ${brunchStep.time}`,
+        note: 'Short DUMBO to brunch transfer.',
+        stepId: brunchStep.stepId,
+        color: brunchStep.color,
+        dashed: false,
+        fromStopId: lastStopId(bridgeStep),
+        toStopId: firstStopId(brunchStep),
+        coords: [
+          [40.699216, -73.997027],
+          [40.69785, -73.9958],
+          [40.695694, -73.994334],
+        ],
+      }),
+    );
+  }
+
+  if (brunchStep && maciStep && firstStopId(brunchStep) && firstStopId(maciStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-brunch-to-broadway',
+        name: 'Branch A: Vineapple -> Maci Broadway',
+        time: `${brunchStep.time} -> ${maciStep.time}`,
+        note: 'Explicit Broadway branch route.',
+        stepId: maciStep.stepId,
+        color: maciStep.color,
+        dashed: true,
+        fromStopId: firstStopId(brunchStep),
+        toStopId: firstStopId(maciStep),
+        coords: [
+          [40.695694, -73.994334],
+          [40.7187, -73.9903],
+          [40.7428, -73.9892],
+          [40.76047, -73.983921],
+        ],
+      }),
+    );
+  }
+
+  if (brunchStep && nathanielStep && firstStopId(brunchStep) && firstStopId(nathanielStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-brunch-to-hangout',
+        name: 'Branch B: Vineapple -> Nathaniel hangout',
+        time: `${brunchStep.time} -> ${nathanielStep.time}`,
+        note: 'Explicit parallel hangout branch route.',
+        stepId: nathanielStep.stepId,
+        color: nathanielStep.color,
+        dashed: true,
+        fromStopId: firstStopId(brunchStep),
+        toStopId: firstStopId(nathanielStep),
+        coords: [
+          [40.695694, -73.994334],
+          [40.7152, -73.993],
+          [40.7348, -73.9887],
+          [40.753597, -73.983233],
+        ],
+      }),
+    );
+  }
+
+  if (maciStep && dinnerStep && firstStopId(maciStep) && firstStopId(dinnerStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-broadway-to-pastis',
+        name: 'Transfer: Broadway -> Pastis dinner',
+        time: `${maciStep.time} -> ${dinnerStep.time}`,
+        note: 'Post-show route to dinner.',
+        stepId: dinnerStep.stepId,
+        color: dinnerStep.color,
+        dashed: true,
+        fromStopId: firstStopId(maciStep),
+        toStopId: firstStopId(dinnerStep),
+        coords: [
+          [40.76047, -73.983921],
+          [40.752, -73.9872],
+          [40.7425, -74.0056],
+          [40.739908, -74.005786],
+        ],
+      }),
+    );
+  }
+
+  if (nathanielStep && dinnerStep && firstStopId(nathanielStep) && firstStopId(dinnerStep)) {
+    routes.push(
+      makeRoute({
+        id: 'sunday-curated-hangout-to-pastis',
+        name: 'Transfer: Nathaniel hangout -> Pastis dinner',
+        time: `${nathanielStep.time} -> ${dinnerStep.time}`,
+        note: 'Meet back up for dinner.',
+        stepId: dinnerStep.stepId,
+        color: dinnerStep.color,
+        dashed: false,
+        fromStopId: firstStopId(nathanielStep),
+        toStopId: firstStopId(dinnerStep),
+        coords: [
+          [40.753597, -73.983233],
+          [40.7489, -73.9932],
+          [40.7443, -74.0016],
+          [40.739908, -74.005786],
+        ],
+      }),
+    );
+  }
+
+  return routes;
+}
+
+function getCuratedRoutes(dayDate, stepStops) {
+  if (dayDate === '2026-02-14') return buildSaturdayCuratedRoutes(stepStops);
+  if (dayDate === '2026-02-15') return buildSundayCuratedRoutes(stepStops);
+  return [];
 }
 
 function getParkWaypoints(dayDate, centralParkStepId) {
@@ -575,6 +902,9 @@ export function buildMapConfigFromDay(day, trip) {
     );
   }
 
+  const curatedRoutes = getCuratedRoutes(safeDay.date, stepStops);
+  const effectiveRoutes = curatedRoutes.length > 0 ? curatedRoutes : routes;
+
   const parkWaypoints = getParkWaypoints(safeDay.date, centralParkStepId);
   const zones = getZones(safeDay.date, stepByTitle);
   const googleMapsUrl = buildGoogleMapsUrl(orderedMapStops.length > 0 ? orderedMapStops : stops);
@@ -592,7 +922,7 @@ export function buildMapConfigFromDay(day, trip) {
     stops,
     staticPoints: [],
     parkWaypoints,
-    routes,
+    routes: effectiveRoutes,
     zones,
   };
 }

@@ -69,11 +69,13 @@ test('sunday includes Vineapple and tentative 2:00 split', () => {
 
   const titles = sunday.items.map((item) => item.title);
   assert.ok(titles.includes('Brunch'));
-  assert.ok(titles.includes('Fiancées: Chicago (tentative)'));
+  assert.ok(titles.includes('Maci: Broadway show'));
   assert.ok(titles.includes('You + Nathaniel hangout (tentative)'));
+  assert.ok(titles.includes('Dinner: Pastis'));
 });
 
 test('root page includes full-day path toggle control', () => {
   assert.match(appHtml, /id="show-full-day-toggle"/);
+  assert.match(appHtml, /id="reset-view-mode-btn"/);
   assert.match(appHtml, /Show full day path/);
 });
