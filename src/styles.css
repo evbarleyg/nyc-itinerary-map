@@ -171,6 +171,35 @@ body {
   font-size: 0.82rem;
 }
 
+.view-mode-row {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #2c4f66;
+}
+
+.view-mode-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #2e6d8d;
+}
+
+.view-mode-label {
+  font-size: 0.76rem;
+  color: #5a6c79;
+}
+
 #itinerary-list {
   list-style: none;
   padding: 0;

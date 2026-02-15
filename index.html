@@ -34,6 +34,13 @@
         </p>
         <p id="trip-status" class="trip-status">Status: loading...</p>
         <p id="engine-badge" class="engine-badge">Map engine: detecting...</p>
+        <div class="view-mode-row">
+          <label class="view-mode-toggle" for="show-full-day-toggle">
+            <input id="show-full-day-toggle" type="checkbox" checked />
+            <span>Show full day path</span>
+          </label>
+          <span id="view-mode-label" class="view-mode-label">Full day path shown</span>
+        </div>
         <ol id="itinerary-list" aria-label="Today itinerary"></ol>
 
         <details class="editor-panel">

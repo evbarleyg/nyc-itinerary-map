@@ -56,6 +56,14 @@ test('Saturday resolves to Roosevelt Island actuals in map config', async () => 
 
     assert.ok(stepTitles.includes('Roosevelt Island via Tram'));
     assert.ok(stopNames.includes('Frank'));
+
+    const stopIds = config.stops.map((stop) => stop.id);
+    assert.ok(stopIds.length < config.steps.length + 2, 'Expected stop dedupe across repeated locations');
+    assert.equal(
+      config.routes.some((route) => /Arrive for show -> Comedy show/.test(route.name)),
+      false,
+      'Should not draw zero-length route between identical comedy locations',
+    );
   });
 });
 
@@ -76,5 +84,10 @@ test('Sunday tentative split and open-ended dinner are retained', async () => {
     const config = buildMapConfigFromDay(sunday, trip);
     const stepMeta = config.steps.map((step) => step.meta).join(' | ');
     assert.match(stepMeta, /Tentative/);
+    assert.equal(
+      config.routes.some((route) => /Fiancées: Chicago \(tentative\) -> You \+ Nathaniel hangout \(tentative\)/.test(route.name)),
+      false,
+      'Parallel 2:00 tentative blocks should not be linked as a forced sequence',
+    );
   });
 });

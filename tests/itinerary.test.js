@@ -9,6 +9,7 @@ import {
 } from '../src/itinerary.js';
 
 const tripData = JSON.parse(fs.readFileSync(new URL('../public/nyc_trip_final.json', import.meta.url), 'utf8'));
+const appHtml = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 test('finalized stop order matches the expected sequence', () => {
   const stopIds = FINALIZED_ITINERARY_PATCH.stops.map((stop) => stop.id);
@@ -70,4 +71,9 @@ test('sunday includes Vineapple and tentative 2:00 split', () => {
   assert.ok(titles.includes('Brunch'));
   assert.ok(titles.includes('Fiancées: Chicago (tentative)'));
   assert.ok(titles.includes('You + Nathaniel hangout (tentative)'));
+});
+
+test('root page includes full-day path toggle control', () => {
+  assert.match(appHtml, /id="show-full-day-toggle"/);
+  assert.match(appHtml, /Show full day path/);
 });

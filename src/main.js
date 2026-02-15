@@ -25,6 +25,7 @@ import {
 import './styles.css';
 
 const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
+const FULL_DAY_VIEW_STORAGE_KEY = 'nyc-itinerary-full-day-view-v1';
 const UPLOADED_PATH_COLOR = '#8c3f13';
 const APP_BASE_URL = ensureTrailingSlash(import.meta.env.BASE_URL || '/');
 
@@ -595,6 +596,7 @@ let activeDayMeta = null;
 let fridayPatch = null;
 let runtimeTripData = null;
 let fixedDayConfigById = new Map(FALLBACK_FIXED_DAY_CONFIGS);
+let showFullDayPath = true;
 
 class LeafletRenderer {
   constructor(containerId) {
@@ -1120,6 +1122,25 @@ function setStatus(message) {
   status.textContent = message;
 }
 
+function getStoredFullDayPathPreference() {
+  try {
+    const raw = localStorage.getItem(FULL_DAY_VIEW_STORAGE_KEY);
+    if (raw === '0' || raw === 'false') return false;
+    if (raw === '1' || raw === 'true') return true;
+  } catch {
+    // Ignore storage errors.
+  }
+  return true;
+}
+
+function storeFullDayPathPreference(enabled) {
+  try {
+    localStorage.setItem(FULL_DAY_VIEW_STORAGE_KEY, enabled ? '1' : '0');
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 function setEngineBadge(message) {
   const badge = document.getElementById('engine-badge');
   badge.textContent = message;
@@ -1383,6 +1404,20 @@ function wireDayHistoryUi() {
   });
 }
 
+function wireViewModeUi() {
+  const toggle = document.getElementById('show-full-day-toggle');
+  syncViewModeUi();
+
+  toggle?.addEventListener('change', () => {
+    setFullDayPathMode(toggle.checked);
+    if (showFullDayPath) {
+      setStatus('Full day path view enabled.');
+      return;
+    }
+    setStatus('Step focus mode enabled. Click a time block to focus a segment.');
+  });
+}
+
 function getStepColor(config, stepId, fallback) {
   const step = config.steps.find((item) => item.id === stepId);
   if (step?.color) return step.color;
@@ -1624,6 +1659,33 @@ function setActiveListItem(stepId) {
   }
 }
 
+function syncViewModeUi() {
+  const toggle = document.getElementById('show-full-day-toggle');
+  if (toggle) toggle.checked = showFullDayPath;
+
+  const label = document.getElementById('view-mode-label');
+  if (!label) return;
+  label.textContent = showFullDayPath ? 'Full day path shown' : 'Step focus mode';
+}
+
+function applyStepHighlightMode() {
+  if (!activeRenderer) return;
+  if (showFullDayPath || !activeStepId) {
+    activeRenderer.setActiveStep(null);
+    return;
+  }
+  activeRenderer.setActiveStep(activeStepId);
+}
+
+function setFullDayPathMode(enabled, persist = true) {
+  showFullDayPath = Boolean(enabled);
+  if (persist) {
+    storeFullDayPathPreference(showFullDayPath);
+  }
+  syncViewModeUi();
+  applyStepHighlightMode();
+}
+
 function getStoredPatch() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1809,7 +1871,7 @@ async function renderMap(config) {
     (stepId) => {
       activeStepId = stepId;
       setActiveListItem(stepId);
-      activeRenderer?.setActiveStep(stepId);
+      applyStepHighlightMode();
     },
     completionInfo.completed,
   );
@@ -1820,8 +1882,10 @@ async function renderMap(config) {
   if (defaultStepId) {
     activeStepId = defaultStepId;
     setActiveListItem(defaultStepId);
-    activeRenderer.setActiveStep(defaultStepId);
+  } else {
+    setActiveListItem(null);
   }
+  applyStepHighlightMode();
 
   const sourceSummary = geocodedStops
     .map((stop) => `${stop.name}: ${stop.geocodeSource}`)
@@ -1903,6 +1967,7 @@ function wireEvents() {
   document.getElementById('apply-updates-btn').addEventListener('click', applyEditorPatch);
   document.getElementById('reset-updates-btn').addEventListener('click', resetEditorTemplate);
   wireDayHistoryUi();
+  wireViewModeUi();
 }
 
 function getFallbackFixedDays() {
@@ -1955,6 +2020,7 @@ async function initializeTripFixedDays() {
 }
 
 async function init() {
+  showFullDayPath = getStoredFullDayPathPreference();
   wireEvents();
   await initializeTripFixedDays();
   loadDayHistory();

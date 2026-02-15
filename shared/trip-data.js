@@ -62,9 +62,12 @@ const KNOWN_COORDS = new Map(
     '241 e 24th st, new york, ny 10010': [40.739145, -73.983551],
     '88 2nd ave, new york, ny 10003': [40.727595, -73.987719],
     'brooklyn bridge pedestrian walkway entrance near city hall, new york, ny': [40.712628, -74.00528],
+    'brooklyn bridge city hall station, new york, ny 10007': [40.713065, -74.004131],
+    '334 furman st, brooklyn, ny 11201': [40.699216, -73.997027],
     '71 pineapple st, brooklyn, ny 11201': [40.695694, -73.994334],
     '219 w 49th st, new york, ny 10019': [40.76047, -73.983921],
     'bryant park, new york, ny 10018': [40.753597, -73.983233],
+    'theater district, new york, ny 10036': [40.7594, -73.9851],
     '11 south st, new york, ny 10004': [40.703245, -74.005938],
     vineapple: [40.695694, -73.994334],
     'new york comedy club - midtown': [40.739145, -73.983551],
@@ -440,6 +443,9 @@ export function buildMapConfigFromDay(day, trip) {
   const routes = [];
   const stepStops = [];
   const stepByTitle = new Map();
+  const stopByLocationKey = new Map();
+  const stopRecordById = new Map();
+  const orderedMapStops = [];
   let centralParkStepId = '';
 
   safeDay.items.forEach((item, index) => {
@@ -465,22 +471,44 @@ export function buildMapConfigFromDay(day, trip) {
 
     const stopIds = [];
     locations.forEach((location, locationIndex) => {
-      const stopId = `${stepId}-stop-${locationIndex + 1}`;
+      const address = resolveLocationAddress(location, safeDay);
+      const locationName = location.name || stepTitle;
+      const locationKey = `${normalizeKey(locationName)}|${normalizeKey(address)}`;
       const note =
         normalizeText(location.notes) ||
         item.notes ||
         (item.status === 'tentative' ? 'Tentative plan.' : 'Planned stop.');
 
-      stops.push({
+      orderedMapStops.push({
+        name: locationName,
+        address,
+      });
+
+      const existingStopId = stopByLocationKey.get(locationKey);
+      if (existingStopId) {
+        const existing = stopRecordById.get(existingStopId);
+        if (existing && !existing.stepIds.includes(stepId)) {
+          existing.stepIds.push(stepId);
+        }
+        stopIds.push(existingStopId);
+        return;
+      }
+
+      const stopId = `${stepId}-stop-${locationIndex + 1}`;
+      const stopRecord = {
         id: stopId,
-        name: location.name || stepTitle,
+        name: locationName,
         time,
-        address: resolveLocationAddress(location, safeDay),
+        address,
         note,
         markerColor: color,
         fallback: getLocationFallback(location),
         stepIds: [stepId],
-      });
+      };
+
+      stops.push(stopRecord);
+      stopRecordById.set(stopId, stopRecord);
+      stopByLocationKey.set(locationKey, stopId);
 
       stopIds.push(stopId);
     });
@@ -489,6 +517,8 @@ export function buildMapConfigFromDay(day, trip) {
       stepId,
       stepTitle,
       stepType: item.type,
+      startTime: item.start_time,
+      endTime: item.end_time,
       time,
       color,
       stopIds,
@@ -519,6 +549,14 @@ export function buildMapConfigFromDay(day, trip) {
     const fromStopId = current.stopIds[current.stopIds.length - 1];
     const toStopId = next.stopIds[0];
     if (!fromStopId || !toStopId) continue;
+    if (fromStopId === toStopId) continue;
+    if (
+      normalizeText(current.startTime) &&
+      normalizeText(next.startTime) &&
+      normalizeText(current.startTime) === normalizeText(next.startTime)
+    ) {
+      continue;
+    }
 
     const transferName = `Transfer: ${current.stepTitle} -> ${next.stepTitle}`;
     const isTransitLike = ['transit', 'rest', 'event'].includes(next.stepType);
@@ -539,7 +577,7 @@ export function buildMapConfigFromDay(day, trip) {
 
   const parkWaypoints = getParkWaypoints(safeDay.date, centralParkStepId);
   const zones = getZones(safeDay.date, stepByTitle);
-  const googleMapsUrl = buildGoogleMapsUrl(stops);
+  const googleMapsUrl = buildGoogleMapsUrl(orderedMapStops.length > 0 ? orderedMapStops : stops);
   const dayTitle = getDayTitle(dayId, safeDay);
   const tentativeCount = safeDay.items.filter((item) => item.status === 'tentative').length;
   const weatherNote =
