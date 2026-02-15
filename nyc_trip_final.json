@@ -1,0 +1,342 @@
+{
+  "trip_name": "NYC Weekend",
+  "timezone": "America/New_York",
+  "last_updated": "2026-02-14T20:45:00-05:00",
+  "days": [
+    {
+      "date": "2026-02-13",
+      "title": "Friday: Midtown -> UES -> Hudson Yards -> Chelsea/Meatpacking + Chinatown Evening",
+      "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
+      "items": [
+        {
+          "start_time": "09:30",
+          "end_time": "09:35",
+          "title": "Start: Thompson Central Park New York",
+          "type": "start",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
+            }
+          ],
+          "notes": "Hotel departure point.",
+          "status": "completed",
+          "completed_at": "2026-02-13T09:35:00-05:00"
+        },
+        {
+          "start_time": "09:35",
+          "end_time": "09:50",
+          "title": "Nordstrom NYC Flagship",
+          "type": "shopping",
+          "locations": [
+            {
+              "name": "Nordstrom NYC Flagship",
+              "address": "225 W 57th St, New York, NY 10019"
+            }
+          ],
+          "notes": "Quick 15-minute stop before entering Central Park.",
+          "status": "completed",
+          "completed_at": "2026-02-13T09:50:00-05:00"
+        },
+        {
+          "start_time": "10:00",
+          "end_time": "11:00",
+          "title": "Central Park walk",
+          "type": "sightseeing",
+          "locations": [
+            {
+              "name": "Central Park 59th St Entrance",
+              "address": "Central Park South & 6th Avenue, New York, NY 10019"
+            },
+            {
+              "name": "Central Park 79th St & 5th Ave Exit",
+              "address": "E 79th St & 5th Ave, New York, NY 10075"
+            }
+          ],
+          "notes": "Completed route: The Pond -> The Mall -> Bethesda Terrace -> exit at 79th & 5th.",
+          "status": "completed",
+          "completed_at": "2026-02-13T11:00:00-05:00"
+        },
+        {
+          "start_time": "11:15",
+          "end_time": "12:15",
+          "title": "Breakfast: EJ's Luncheonette",
+          "type": "dining",
+          "locations": [
+            {
+              "name": "EJ's Luncheonette",
+              "address": "1271 3rd Ave, New York, NY 10021"
+            }
+          ],
+          "notes": "Breakfast completed on the Upper East Side.",
+          "status": "completed",
+          "completed_at": "2026-02-13T12:15:00-05:00"
+        },
+        {
+          "start_time": "12:30",
+          "end_time": "13:45",
+          "title": "The Frick Collection",
+          "type": "museum",
+          "locations": [
+            {
+              "name": "The Frick Collection",
+              "address": "1 E 70th St, New York, NY 10021"
+            }
+          ],
+          "notes": "Frick museum block completed.",
+          "status": "completed",
+          "completed_at": "2026-02-13T13:45:00-05:00"
+        },
+        {
+          "start_time": "14:00",
+          "end_time": "15:15",
+          "title": "Lunch: Ci Siamo",
+          "type": "dining",
+          "locations": [
+            {
+              "name": "Ci Siamo",
+              "address": "440 W 33rd St, New York, NY 10001"
+            }
+          ],
+          "notes": "Lunch completed in Hudson Yards / Midtown West.",
+          "status": "completed",
+          "completed_at": "2026-02-13T15:12:00-05:00"
+        },
+        {
+          "start_time": "15:30",
+          "end_time": "17:00",
+          "title": "High Line walk southbound",
+          "type": "walk",
+          "locations": [
+            {
+              "name": "High Line Hudson Yards Entrance",
+              "address": "W 34th St & 10th Ave, New York, NY 10199"
+            },
+            {
+              "name": "Gansevoort St area",
+              "address": "Gansevoort St, New York, NY 10014"
+            }
+          ],
+          "notes": "Completed southbound High Line walk into Meatpacking.",
+          "status": "completed",
+          "completed_at": "2026-02-13T17:00:00-05:00"
+        },
+        {
+          "start_time": "17:00",
+          "end_time": "18:30",
+          "title": "Drinks anchor (Chelsea/Meatpacking)",
+          "type": "drinks",
+          "locations": [
+            {
+              "name": "Gansevoort St & Washington St",
+              "address": "Gansevoort St & Washington St, New York, NY 10014"
+            }
+          ],
+          "notes": "Completed anchor drinks block in Chelsea/Meatpacking.",
+          "status": "completed",
+          "completed_at": "2026-02-13T18:30:00-05:00"
+        },
+        {
+          "start_time": "19:15",
+          "end_time": "20:45",
+          "title": "Drinks at The River",
+          "type": "drinks",
+          "locations": [
+            {
+              "name": "The River",
+              "address": "102 Bayard St, New York, NY 10013",
+              "notes": "Chinatown cocktail bar stop."
+            }
+          ],
+          "notes": "Completed drinks stop in Chinatown.",
+          "status": "completed",
+          "completed_at": "2026-02-13T20:43:00-05:00"
+        },
+        {
+          "start_time": "21:00",
+          "end_time": "22:25",
+          "title": "Dinner at Peking Duck House",
+          "type": "dining",
+          "locations": [
+            {
+              "name": "Peking Duck House",
+              "address": "28 Mott St, New York, NY 10013"
+            }
+          ],
+          "notes": "Peking duck dinner completed.",
+          "status": "completed",
+          "completed_at": "2026-02-13T22:24:00-05:00"
+        },
+        {
+          "start_time": "22:30",
+          "end_time": "23:05",
+          "title": "Return to hotel",
+          "type": "transit",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
+            }
+          ],
+          "notes": "Returned to hotel after dinner.",
+          "status": "completed",
+          "completed_at": "2026-02-13T23:05:00-05:00"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-14",
+      "title": "Valentine's Day (relaxed)",
+      "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
+      "items": [
+        {
+          "start_time": "14:45",
+          "end_time": "16:15",
+          "title": "Roosevelt Island via Tram",
+          "type": "sightseeing",
+          "locations": [
+            {
+              "name": "Roosevelt Island Tramway (Manhattan Tramway Plaza)",
+              "address": "E 59th St & 2nd Ave, New York, NY 10022"
+            },
+            {
+              "name": "Roosevelt Island",
+              "notes": "Walked south along the promenade after the tram ride.",
+              "address": "Roosevelt Island, New York, NY 10044"
+            }
+          ],
+          "notes": "Completed via Roosevelt Island Tram; scenic walk on Roosevelt Island completed as planned.",
+          "status": "completed",
+          "completed_at": "2026-02-14T16:12:00-05:00"
+        },
+        {
+          "start_time": "16:15",
+          "end_time": "16:45",
+          "title": "Jellycat stop (FAO Schwarz)",
+          "type": "shopping",
+          "locations": [
+            {
+              "name": "FAO Schwarz",
+              "address": "30 Rockefeller Plaza, New York, NY 10112"
+            }
+          ],
+          "status": "completed",
+          "completed_at": "2026-02-14T16:42:00-05:00",
+          "notes": "Completed Jellycat stop at FAO Schwarz; picked up items and moved on schedule."
+        },
+        {
+          "start_time": "17:00",
+          "end_time": "18:00",
+          "title": "Midtown wine bar (Aldo Sohm Wine Bar)",
+          "type": "drinks",
+          "locations": [
+            {
+              "name": "Aldo Sohm Wine Bar",
+              "address": "151 W 51st St, New York, NY 10019",
+              "notes": "Confirmed selection; replaced prior placeholder."
+            }
+          ],
+          "status": "completed",
+          "completed_at": "2026-02-14T17:58:00-05:00",
+          "notes": "Selected venue: Aldo Sohm Wine Bar for wine and a light break before hotel reset."
+        },
+        {
+          "start_time": "18:30",
+          "end_time": "20:15",
+          "title": "Hotel reset",
+          "type": "rest",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
+            }
+          ],
+          "notes": "Reset and change as needed.",
+          "status": "completed",
+          "completed_at": "2026-02-14T20:12:00-05:00"
+        },
+        {
+          "start_time": "20:40",
+          "end_time": "21:00",
+          "title": "Arrive for show",
+          "type": "transit",
+          "notes": "Target arrival 15–20 minutes before showtime.",
+          "status": "completed",
+          "completed_at": "2026-02-14T20:42:00-05:00",
+          "locations": [
+            {
+              "name": "New York Comedy Club - Midtown",
+              "address": "241 E 24th St, New York, NY 10010"
+            }
+          ]
+        },
+        {
+          "start_time": "21:00",
+          "end_time": "22:30",
+          "title": "Comedy show",
+          "type": "event",
+          "locations": [
+            {
+              "name": "New York Comedy Club - Midtown",
+              "address": "241 E 24th St, New York, NY 10010",
+              "notes": "Tonight venue confirmed as Midtown."
+            }
+          ]
+        },
+        {
+          "start_time": "22:45",
+          "end_time": "23:59",
+          "title": "Late dinner",
+          "type": "dining",
+          "locations": [
+            {
+              "name": "Frank",
+              "address": "88 2nd Ave, New York, NY 10003"
+            }
+          ],
+          "notes": "Reservation at 10:45pm."
+        }
+      ]
+    },
+    {
+      "date": "2026-02-15",
+      "title": "Brooklyn Bridge + Brunch",
+      "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
+      "items": [
+        {
+          "start_time": "09:45",
+          "end_time": "10:10",
+          "title": "Subway to Brooklyn Bridge–City Hall",
+          "type": "transit",
+          "notes": "Take 4/5 downtown to Brooklyn Bridge–City Hall.",
+          "locations": []
+        },
+        {
+          "start_time": "10:10",
+          "end_time": "10:50",
+          "title": "Walk Brooklyn Bridge (Manhattan → Brooklyn)",
+          "type": "sightseeing",
+          "locations": [
+            {
+              "name": "Brooklyn Bridge Pedestrian Entrance (Manhattan side)",
+              "notes": "Enter near City Hall."
+            }
+          ],
+          "notes": "Relaxed pace with photo stops."
+        },
+        {
+          "start_time": "11:00",
+          "end_time": "12:15",
+          "title": "Brunch",
+          "type": "dining",
+          "locations": [
+            {
+              "name": "Vineapple",
+              "address": "71 Pineapple St, Brooklyn, NY 11201"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
