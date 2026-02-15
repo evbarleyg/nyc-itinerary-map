@@ -1412,6 +1412,9 @@ function wireViewModeUi() {
   toggle?.addEventListener('change', () => {
     setFullDayPathMode(toggle.checked);
     if (showFullDayPath) {
+      activeStepId = null;
+      setActiveListItem(null);
+      applyStepHighlightMode();
       setStatus('Full day path view enabled.');
       return;
     }
@@ -1420,6 +1423,9 @@ function wireViewModeUi() {
 
   resetButton?.addEventListener('click', () => {
     setFullDayPathMode(true);
+    activeStepId = null;
+    setActiveListItem(null);
+    applyStepHighlightMode();
     activeRenderer?.fitToData();
     setStatus('Reset to full day path view.');
   });
@@ -1629,7 +1635,13 @@ function renderLegend(steps, hasUploadedPath = false) {
     `
     : '';
 
-  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}${uploadedLine}`;
+  const styleNote = `
+      <div class="legend-row">
+        <span>Solid: on-foot. Dotted: transit/ride transfer (or uploaded path).</span>
+      </div>
+    `;
+
+  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}${uploadedLine}${styleNote}`;
 }
 
 function renderItineraryList(steps, onSelect, completedView) {
@@ -1677,7 +1689,7 @@ function syncViewModeUi() {
 
 function applyStepHighlightMode() {
   if (!activeRenderer) return;
-  if (showFullDayPath || !activeStepId) {
+  if (!activeStepId) {
     activeRenderer.setActiveStep(null);
     return;
   }
@@ -1876,22 +1888,26 @@ async function renderMap(config) {
   renderItineraryList(
     config.steps,
     (stepId) => {
+      if (activeStepId === stepId) {
+        activeStepId = null;
+        setFullDayPathMode(true, false);
+        setActiveListItem(null);
+        applyStepHighlightMode();
+        setStatus('Full day path shown.');
+        return;
+      }
+
       activeStepId = stepId;
+      setFullDayPathMode(false, false);
       setActiveListItem(stepId);
       applyStepHighlightMode();
     },
     completionInfo.completed,
   );
 
-  const defaultStepId =
-    activeStepId && config.steps.some((step) => step.id === activeStepId) ? activeStepId : config.steps[0]?.id;
-
-  if (defaultStepId) {
-    activeStepId = defaultStepId;
-    setActiveListItem(defaultStepId);
-  } else {
-    setActiveListItem(null);
-  }
+  activeStepId = null;
+  setActiveListItem(null);
+  setFullDayPathMode(true, false);
   applyStepHighlightMode();
 
   const sourceSummary = geocodedStops
