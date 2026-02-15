@@ -77,5 +77,5 @@ test('day history tabs and upload controls are present', () => {
 
 test('saturday guide includes view-on-map uploaded day link pattern', () => {
   const html = readGuide();
-  assert.match(html, /\/\?day=/);
+  assert.match(html, /\?day=/);
 });

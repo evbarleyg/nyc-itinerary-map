@@ -22,6 +22,7 @@ import './styles.css';
 const MAPBOX_TOKEN = (import.meta.env.MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
 const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
 const UPLOADED_PATH_COLOR = '#8c3f13';
+const APP_BASE_URL = ensureTrailingSlash(import.meta.env.BASE_URL || '/');
 
 const DEFAULT_ITINERARY = {
   weatherNote:
@@ -1140,15 +1141,23 @@ function setGoogleMapsLink(url) {
   link.href = getGoogleMapsUrl({ googleMapsUrl: url });
 }
 
+function ensureTrailingSlash(value) {
+  if (typeof value !== 'string' || !value.trim()) return '/';
+  return value.endsWith('/') ? value : `${value}/`;
+}
+
 function isIsoDay(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
 }
 
 function getRootDayHref(day) {
   if (day.kind === 'uploaded') {
-    return `/?day=${encodeURIComponent(day.id)}`;
+    return `${APP_BASE_URL}?day=${encodeURIComponent(day.id)}`;
   }
-  return day.href || '/';
+  if (day.id === 'saturday') {
+    return `${APP_BASE_URL}saturday/`;
+  }
+  return APP_BASE_URL;
 }
 
 function setDayHistoryStatus(message) {
@@ -1182,7 +1191,7 @@ function renderDayTabs() {
       } else if (day.id === 'friday') {
         evt.preventDefault();
         setActiveDay('friday');
-        window.location.href = '/';
+        window.location.href = APP_BASE_URL;
       } else if (day.id === 'saturday') {
         setActiveDay('saturday');
       }

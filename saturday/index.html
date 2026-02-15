@@ -566,6 +566,11 @@
       import { getActiveDay, listDays, saveUploadedPath, setActiveDay } from "../shared/day-history.js";
 
       (function () {
+        const saturdaySegment = "/saturday/";
+        const pathName = window.location.pathname || "/";
+        const saturdayIndex = pathName.indexOf(saturdaySegment);
+        const siteBasePath = saturdayIndex >= 0 ? pathName.slice(0, saturdayIndex + 1) : "/";
+
         const copyBtn = document.getElementById("copy-link-btn");
         const copyStatus = document.getElementById("copy-status");
         const allStopsLink = document.getElementById("all-stops-link");
@@ -580,8 +585,9 @@
         }
 
         function getDayHref(day) {
-          if (day.kind === "uploaded") return "/?day=" + encodeURIComponent(day.id);
-          return day.href || "/";
+          if (day.kind === "uploaded") return siteBasePath + "?day=" + encodeURIComponent(day.id);
+          if (day.id === "saturday") return siteBasePath + "saturday/";
+          return siteBasePath;
         }
 
         function setStatus(message) {
@@ -597,7 +603,9 @@
           }
 
           viewWrapEl.innerHTML =
-            'Mapped day ready: <a href="/?day=' +
+            'Mapped day ready: <a href="' +
+            siteBasePath +
+            '?day=' +
             encodeURIComponent(activeDay.id) +
             '">View on map</a>';
         }
@@ -618,14 +626,14 @@
               if (day.kind === "uploaded") {
                 event.preventDefault();
                 setActiveDay(day.id);
-                window.location.href = "/?day=" + encodeURIComponent(day.id);
+                window.location.href = siteBasePath + "?day=" + encodeURIComponent(day.id);
                 return;
               }
 
               if (day.id === "friday") {
                 event.preventDefault();
                 setActiveDay("friday");
-                window.location.href = "/";
+                window.location.href = siteBasePath;
                 return;
               }
 
