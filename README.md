@@ -9,6 +9,7 @@ Single-page map app for today's NYC itinerary with:
 - PNG export of current map view
 - Shared day tabs across `/` and `/saturday/`
 - iPhone day-path upload (`GPX`, `KML`, `GeoJSON`) with local-only persistence
+- Single-page day selectors on `/` (Friday, Saturday, uploaded days)
 
 ## Run
 

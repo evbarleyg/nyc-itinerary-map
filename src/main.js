@@ -253,14 +253,247 @@ const DEFAULT_ITINERARY = {
   ],
 };
 
-const BASE_ITINERARY = applyPatchToConfig(DEFAULT_ITINERARY, FINALIZED_ITINERARY_PATCH);
+const SATURDAY_GOOGLE_MAPS_URL =
+  'https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Frank,+88+2nd+Ave,+New+York,+NY+10003&waypoints=Brooklyn+Bridge+Pedestrian+Walkway+Entrance+near+City+Hall,+New+York,+NY|Pier+11+Wall+St,+11+South+St,+New+York,+NY+10004|The+Ten+Bells,+247+Broome+St,+New+York,+NY+10002|Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019|New+York+Comedy+Club+Midtown,+241+E+24th+St,+New+York,+NY+10010&travelmode=transit';
 
-let activeConfig = deepClone(BASE_ITINERARY);
+const SATURDAY_ITINERARY = {
+  weatherNote:
+    'Cold but sunny. Keep this day loose: bridge + ferry + LES stop, then hotel reset before comedy and dinner.',
+  googleMapsUrl: SATURDAY_GOOGLE_MAPS_URL,
+  steps: [
+    {
+      id: 'sat-step1',
+      time: '2:30-ish',
+      title: 'Brooklyn Bridge walk (Manhattan -> Brooklyn)',
+      meta: 'Start near City Hall entrance',
+      color: '#2f6c59',
+    },
+    {
+      id: 'sat-step2',
+      time: 'After crossing',
+      title: 'NYC Ferry primary return to Wall St/Pier 11',
+      meta: 'Fallback: walk back if ferry timing is bad',
+      color: '#376f9f',
+    },
+    {
+      id: 'sat-step3',
+      time: '4:30-ish',
+      title: 'The Ten Bells',
+      meta: 'Wine + small plates (walk-in)',
+      color: '#8a5a3d',
+    },
+    {
+      id: 'sat-step4',
+      time: '6:00-ish',
+      title: 'Hotel reset',
+      meta: 'Return to Thompson Central Park New York',
+      color: '#54758a',
+    },
+    {
+      id: 'sat-step5',
+      time: '8:40 arrival (9:00 show)',
+      title: 'New York Comedy Club - Midtown',
+      meta: 'Hard commitment',
+      color: '#6d4d8f',
+    },
+    {
+      id: 'sat-step6',
+      time: '10:45 reservation',
+      title: 'Frank',
+      meta: 'Dinner after comedy',
+      color: '#ad5d3b',
+    },
+  ],
+  stops: [
+    {
+      id: 'sat-hotel',
+      name: 'Thompson Central Park New York',
+      time: 'Start / reset point',
+      address: '119 W 56th St, New York, NY 10019',
+      note: 'Base for the day.',
+      markerColor: '#54758a',
+      fallback: [40.7643285, -73.978572],
+      stepIds: ['sat-step1', 'sat-step4', 'sat-step5'],
+    },
+    {
+      id: 'sat-bridge',
+      name: 'Brooklyn Bridge Manhattan Entrance (City Hall side)',
+      time: '2:30-ish',
+      address: 'Brooklyn Bridge Pedestrian Walkway Entrance near City Hall, New York, NY',
+      note: 'Walk Manhattan to Brooklyn.',
+      markerColor: '#2f6c59',
+      fallback: [40.712628, -74.00528],
+      stepIds: ['sat-step1', 'sat-step2'],
+    },
+    {
+      id: 'sat-ferry',
+      name: 'Pier 11 / Wall St',
+      time: 'After crossing',
+      address: '11 South St, New York, NY 10004',
+      note: 'Ferry destination in Manhattan.',
+      markerColor: '#376f9f',
+      fallback: [40.703245, -74.005938],
+      stepIds: ['sat-step2', 'sat-step3'],
+    },
+    {
+      id: 'sat-tenbells',
+      name: 'The Ten Bells',
+      time: '4:30-ish',
+      address: '247 Broome St, New York, NY 10002',
+      note: 'Wine + small plates, walk-in.',
+      markerColor: '#8a5a3d',
+      fallback: [40.717761, -73.989307],
+      stepIds: ['sat-step3', 'sat-step4'],
+    },
+    {
+      id: 'sat-comedy',
+      name: 'New York Comedy Club - Midtown',
+      time: '8:40 arrival (9:00 show)',
+      address: '241 E 24th St, New York, NY 10010',
+      note: 'Hard commitment: arrive early.',
+      markerColor: '#6d4d8f',
+      fallback: [40.739145, -73.983551],
+      stepIds: ['sat-step5', 'sat-step6'],
+    },
+    {
+      id: 'sat-frank',
+      name: 'Frank',
+      time: '10:45 reservation',
+      address: '88 2nd Ave, New York, NY 10003',
+      note: 'Dinner after comedy.',
+      markerColor: '#ad5d3b',
+      fallback: [40.727595, -73.987719],
+      stepIds: ['sat-step6'],
+    },
+  ],
+  staticPoints: [
+    {
+      id: 'sat-dumbo-ferry',
+      name: 'DUMBO/Fulton Ferry departure area',
+      time: 'After crossing',
+      address: 'DUMBO/Fulton Ferry Landing, Brooklyn, NY',
+      note: 'Likely departure context. Check live ferry status.',
+      markerColor: '#376f9f',
+      coord: [40.703373, -73.995955],
+      stepIds: ['sat-step2'],
+    },
+  ],
+  parkWaypoints: [],
+  routes: [
+    {
+      id: 'sat-route1',
+      name: 'Transit: Hotel -> Brooklyn Bridge entrance',
+      time: '2:30-ish',
+      note: 'Subway-first or direct ride.',
+      stepIds: ['sat-step1'],
+      color: '#2f6c59',
+      dashed: true,
+      coords: [
+        [40.7643285, -73.978572],
+        [40.742, -73.996],
+        [40.712628, -74.00528],
+      ],
+    },
+    {
+      id: 'sat-route2',
+      name: 'Walk: Brooklyn Bridge Manhattan -> Brooklyn',
+      time: '2:30-ish',
+      note: 'Scenic crossing, exposed wind on span.',
+      stepIds: ['sat-step1'],
+      color: '#2f6c59',
+      dashed: false,
+      coords: [
+        [40.712628, -74.00528],
+        [40.70675, -74.00371],
+        [40.70402, -73.99943],
+        [40.703373, -73.995955],
+      ],
+    },
+    {
+      id: 'sat-route3',
+      name: 'Ferry primary: DUMBO/Fulton Ferry -> Pier 11 / Wall St',
+      time: 'After crossing',
+      note: 'Primary return option; fallback is walking back.',
+      stepIds: ['sat-step2'],
+      color: '#376f9f',
+      dashed: true,
+      coords: [
+        [40.703373, -73.995955],
+        [40.702655, -74.001628],
+        [40.703245, -74.005938],
+      ],
+    },
+    {
+      id: 'sat-route4',
+      name: 'Transit/Walk: Pier 11 -> The Ten Bells',
+      time: '4:00-4:30-ish',
+      note: 'Lower Manhattan to LES transfer.',
+      stepIds: ['sat-step3'],
+      color: '#8a5a3d',
+      dashed: true,
+      coords: [
+        [40.703245, -74.005938],
+        [40.7139, -73.9972],
+        [40.717761, -73.989307],
+      ],
+    },
+    {
+      id: 'sat-route5',
+      name: 'Transit: The Ten Bells -> Hotel reset',
+      time: '6:00-ish',
+      note: 'Return uptown to reset.',
+      stepIds: ['sat-step4'],
+      color: '#54758a',
+      dashed: true,
+      coords: [
+        [40.717761, -73.989307],
+        [40.739, -73.987],
+        [40.7643285, -73.978572],
+      ],
+    },
+    {
+      id: 'sat-route6',
+      name: 'Transit: Hotel -> NYCC Midtown',
+      time: '8:05-8:40',
+      note: 'If running late, choose direct ride.',
+      stepIds: ['sat-step5'],
+      color: '#6d4d8f',
+      dashed: true,
+      coords: [
+        [40.7643285, -73.978572],
+        [40.748, -73.985],
+        [40.739145, -73.983551],
+      ],
+    },
+    {
+      id: 'sat-route7',
+      name: 'Comedy -> Frank',
+      time: '10:30-10:45',
+      note: 'Walk about 20-25 minutes or short ride.',
+      stepIds: ['sat-step6'],
+      color: '#ad5d3b',
+      dashed: false,
+      coords: [
+        [40.739145, -73.983551],
+        [40.7343, -73.9867],
+        [40.727595, -73.987719],
+      ],
+    },
+  ],
+  zones: [],
+};
+
+const FRIDAY_BASE_ITINERARY = applyPatchToConfig(DEFAULT_ITINERARY, FINALIZED_ITINERARY_PATCH);
+const SATURDAY_BASE_ITINERARY = sanitizeConfig(SATURDAY_ITINERARY);
+
+let activeConfig = deepClone(FRIDAY_BASE_ITINERARY);
 let activeRenderer = null;
 let activeStepId = null;
 let renderNonce = 0;
 let activeDayId = null;
 let activeDayPathGeoJSON = null;
+let activeDayMeta = null;
+let fridayPatch = null;
 
 class LeafletRenderer {
   constructor(containerId) {
@@ -1094,8 +1327,9 @@ function setWeatherNote(message) {
   weather.textContent = message;
 }
 
-function getItineraryCompletionInfo() {
-  const itineraryEnd = new Date(`${ITINERARY_DATE}T23:59:59`);
+function getItineraryCompletionInfo(targetDate = ITINERARY_DATE) {
+  const day = isIsoDay(targetDate) ? targetDate : ITINERARY_DATE;
+  const itineraryEnd = new Date(`${day}T23:59:59`);
   const now = new Date();
   const completed = now.getTime() > itineraryEnd.getTime();
 
@@ -1104,10 +1338,10 @@ function getItineraryCompletionInfo() {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-  }).format(new Date(`${ITINERARY_DATE}T12:00:00`));
+  }).format(new Date(`${day}T12:00:00`));
 
   const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startItinerary = new Date(`${ITINERARY_DATE}T00:00:00`);
+  const startItinerary = new Date(`${day}T00:00:00`);
   const dayDiff = Math.round((startNow.getTime() - startItinerary.getTime()) / 86400000);
 
   if (completed && dayDiff === 1) {
@@ -1151,13 +1385,58 @@ function isIsoDay(value) {
 }
 
 function getRootDayHref(day) {
-  if (day.kind === 'uploaded') {
-    return `${APP_BASE_URL}?day=${encodeURIComponent(day.id)}`;
+  return `${APP_BASE_URL}?day=${encodeURIComponent(day.id)}`;
+}
+
+function setPanelTitle(day) {
+  const panelTitle = document.getElementById('panel-title');
+  if (!panelTitle) return;
+
+  if (!day) {
+    panelTitle.textContent = 'NYC Day Itinerary';
+    return;
   }
-  if (day.id === 'saturday') {
-    return `${APP_BASE_URL}saturday/`;
+
+  const suffix = day.date ? `${day.title} (${day.date})` : day.title;
+  panelTitle.textContent = `NYC Day Itinerary - ${suffix}`;
+}
+
+function buildUploadedDayConfig(day) {
+  const title = day?.title || 'Uploaded Day';
+  const date = day?.date ? ` (${day.date})` : '';
+
+  return sanitizeConfig({
+    weatherNote: `Uploaded day path${date}. Use this selector for your recorded route.`,
+    googleMapsUrl: 'https://www.google.com/maps',
+    steps: [
+      {
+        id: 'uploaded-step',
+        time: day?.date || 'Any time',
+        title: `${title} path`,
+        meta: 'Phone-uploaded route overlay',
+        color: UPLOADED_PATH_COLOR,
+      },
+    ],
+    stops: [],
+    staticPoints: [],
+    parkWaypoints: [],
+    routes: [],
+    zones: [],
+  });
+}
+
+function getConfigForDay(dayId, dayMeta) {
+  if (dayId === 'saturday') return deepClone(SATURDAY_BASE_ITINERARY);
+  if (dayId === 'friday') {
+    return applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch || buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY));
   }
-  return APP_BASE_URL;
+  return buildUploadedDayConfig(dayMeta);
+}
+
+function syncEditorVisibility() {
+  const editorPanel = document.querySelector('.editor-panel');
+  if (!editorPanel) return;
+  editorPanel.hidden = activeDayId !== 'friday';
 }
 
 function setDayHistoryStatus(message) {
@@ -1183,18 +1462,13 @@ function renderDayTabs() {
     link.href = getRootDayHref(day);
     link.textContent = day.title;
 
-    link.addEventListener('click', (evt) => {
-      if (day.kind === 'uploaded') {
-        evt.preventDefault();
-        setActiveDay(day.id);
-        window.location.href = getRootDayHref(day);
-      } else if (day.id === 'friday') {
-        evt.preventDefault();
-        setActiveDay('friday');
-        window.location.href = APP_BASE_URL;
-      } else if (day.id === 'saturday') {
-        setActiveDay('saturday');
-      }
+    link.addEventListener('click', async (evt) => {
+      evt.preventDefault();
+      await selectDay(day.id);
+
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set('day', day.id);
+      window.history.replaceState({}, '', nextUrl.toString());
     });
 
     container.appendChild(link);
@@ -1227,6 +1501,25 @@ function setDaySummaryStatus() {
   setDayHistoryStatus(`Active day: ${activeDay.title}. Upload GPX/KML/GeoJSON to add a day path overlay.`);
 }
 
+async function selectDay(dayId) {
+  const days = listDays();
+  const availableIds = new Set(days.map((day) => day.id));
+  const resolvedDayId = availableIds.has(dayId) ? dayId : 'friday';
+
+  activeDayId = setActiveDay(resolvedDayId);
+  activeDayMeta = days.find((day) => day.id === activeDayId) || null;
+  setPanelTitle(activeDayMeta);
+  syncEditorVisibility();
+  await refreshActiveDayPath();
+
+  activeConfig = getConfigForDay(activeDayId, activeDayMeta);
+  activeStepId = null;
+
+  renderDayTabs();
+  setDaySummaryStatus();
+  await renderMap(activeConfig);
+}
+
 async function handlePathUpload(file) {
   if (!file) return;
 
@@ -1251,11 +1544,10 @@ async function handlePathUpload(file) {
       title: trimmedTitle || undefined,
     });
 
-    activeDayId = setActiveDay(saved.day.id);
-    await refreshActiveDayPath();
-    renderDayTabs();
-    setDaySummaryStatus();
-    await renderMap(activeConfig);
+    await selectDay(saved.day.id);
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('day', saved.day.id);
+    window.history.replaceState({}, '', nextUrl.toString());
   } catch (error) {
     setDayHistoryStatus(`Upload failed: ${error.message}`);
   }
@@ -1640,7 +1932,7 @@ function setControlsDisabled(disabled) {
 
 async function renderMap(config) {
   const nonce = ++renderNonce;
-  const completionInfo = getItineraryCompletionInfo();
+  const completionInfo = getItineraryCompletionInfo(activeDayMeta?.date || ITINERARY_DATE);
   setControlsDisabled(true);
   setWeatherNote(config.weatherNote);
   setTripStatus(completionInfo);
@@ -1746,15 +2038,21 @@ async function renderMap(config) {
 
   const uploadedSummary =
     uploadedPathRoutes.length > 0 ? ` | Uploaded path segments: ${uploadedPathRoutes.length}` : '';
-  setStatus(`Loaded. Geocode sources -> ${sourceSummary}${uploadedSummary}`);
+  const sourceText = sourceSummary || 'none';
+  setStatus(`Loaded. Geocode sources -> ${sourceText}${uploadedSummary}`);
   setControlsDisabled(false);
 }
 
 async function applyEditorPatch() {
+  if (activeDayId !== 'friday') {
+    setStatus('JSON editor currently applies to Friday. Switch to Friday to edit.');
+    return;
+  }
+
   try {
     const patch = readEditorPatch();
-    const nextConfig = applyPatchToConfig(BASE_ITINERARY, patch);
-    activeConfig = nextConfig;
+    fridayPatch = patch;
+    activeConfig = applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch);
     storePatch(patch);
     await renderMap(activeConfig);
     setStatus('Updates applied. Map redrawn from editor JSON.');
@@ -1764,10 +2062,16 @@ async function applyEditorPatch() {
 }
 
 async function resetEditorTemplate() {
-  const patch = buildDefaultPatchTemplate(BASE_ITINERARY);
+  if (activeDayId !== 'friday') {
+    setStatus('JSON editor currently applies to Friday. Switch to Friday to edit.');
+    return;
+  }
+
+  const patch = buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY);
   setEditorPatch(patch);
   storePatch(patch);
-  activeConfig = applyPatchToConfig(BASE_ITINERARY, patch);
+  fridayPatch = patch;
+  activeConfig = applyPatchToConfig(FRIDAY_BASE_ITINERARY, fridayPatch);
   await renderMap(activeConfig);
   setStatus('Editor reset to default itinerary template.');
 }
@@ -1812,6 +2116,10 @@ async function init() {
   wireEvents();
   loadDayHistory();
 
+  const storedPatch = getStoredPatch();
+  fridayPatch = storedPatch || buildDefaultPatchTemplate(FRIDAY_BASE_ITINERARY);
+  setEditorPatch(fridayPatch);
+
   const queryDay = new URLSearchParams(window.location.search).get('day')?.trim();
   const availableDayIds = new Set(listDays().map((day) => day.id));
 
@@ -1824,16 +2132,7 @@ async function init() {
     }
   }
 
-  await refreshActiveDayPath();
-  renderDayTabs();
-  setDaySummaryStatus();
-
-  const storedPatch = getStoredPatch();
-  const startingPatch = storedPatch || buildDefaultPatchTemplate(BASE_ITINERARY);
-  setEditorPatch(startingPatch);
-
-  activeConfig = applyPatchToConfig(BASE_ITINERARY, startingPatch);
-  await renderMap(activeConfig);
+  await selectDay(activeDayId);
 }
 
 init().catch((error) => {
