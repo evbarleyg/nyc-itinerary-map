@@ -6,6 +6,23 @@
     <title>NYC Itinerary Map</title>
   </head>
   <body>
+    <header id="day-history-bar" class="day-history-bar" aria-label="Day history">
+      <div class="day-history-tabs-wrap">
+        <nav id="day-tabs" class="day-tabs" aria-label="Day tabs"></nav>
+      </div>
+      <div class="day-history-actions">
+        <button id="upload-day-path-btn" type="button">Upload Day Path</button>
+        <input
+          id="upload-day-path-input"
+          type="file"
+          accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/vnd.google-earth.kml+xml,application/geo+json,application/json"
+          hidden
+        />
+        <span id="day-history-status" class="day-history-status">
+          Upload a GPX/KML/GeoJSON path from Files to add a day tab.
+        </span>
+      </div>
+    </header>
     <div id="app">
       <aside id="itinerary-panel">
         <h1>NYC Day Itinerary</h1>

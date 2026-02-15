@@ -9,10 +9,19 @@ import {
   ITINERARY_DATE,
   getGoogleMapsUrl,
 } from './itinerary.js';
+import {
+  getActiveDay,
+  getDayPathGeoJSON,
+  listDays,
+  loadDayHistory,
+  saveUploadedPath,
+  setActiveDay,
+} from '../shared/day-history.js';
 import './styles.css';
 
 const MAPBOX_TOKEN = (import.meta.env.MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
 const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
+const UPLOADED_PATH_COLOR = '#8c3f13';
 
 const DEFAULT_ITINERARY = {
   weatherNote:
@@ -249,6 +258,8 @@ let activeConfig = deepClone(BASE_ITINERARY);
 let activeRenderer = null;
 let activeStepId = null;
 let renderNonce = 0;
+let activeDayId = null;
+let activeDayPathGeoJSON = null;
 
 class LeafletRenderer {
   constructor(containerId) {
@@ -1129,6 +1140,133 @@ function setGoogleMapsLink(url) {
   link.href = getGoogleMapsUrl({ googleMapsUrl: url });
 }
 
+function isIsoDay(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+}
+
+function getRootDayHref(day) {
+  if (day.kind === 'uploaded') {
+    return `/?day=${encodeURIComponent(day.id)}`;
+  }
+  return day.href || '/';
+}
+
+function setDayHistoryStatus(message) {
+  const status = document.getElementById('day-history-status');
+  if (status) status.textContent = message;
+}
+
+function renderDayTabs() {
+  const container = document.getElementById('day-tabs');
+  if (!container) return;
+
+  const days = listDays();
+  container.innerHTML = '';
+
+  for (const day of days) {
+    const link = document.createElement('a');
+    link.className = 'day-tab';
+    if (day.id === activeDayId) {
+      link.classList.add('is-active');
+      link.setAttribute('aria-current', 'page');
+    }
+
+    link.href = getRootDayHref(day);
+    link.textContent = day.title;
+
+    link.addEventListener('click', (evt) => {
+      if (day.kind === 'uploaded') {
+        evt.preventDefault();
+        setActiveDay(day.id);
+        window.location.href = getRootDayHref(day);
+      } else if (day.id === 'friday') {
+        evt.preventDefault();
+        setActiveDay('friday');
+        window.location.href = '/';
+      } else if (day.id === 'saturday') {
+        setActiveDay('saturday');
+      }
+    });
+
+    container.appendChild(link);
+  }
+}
+
+async function refreshActiveDayPath() {
+  if (!activeDayId || activeDayId === 'friday' || activeDayId === 'saturday') {
+    activeDayPathGeoJSON = null;
+    return;
+  }
+  activeDayPathGeoJSON = await getDayPathGeoJSON(activeDayId);
+}
+
+function setDaySummaryStatus() {
+  const days = listDays();
+  const activeDay = days.find((day) => day.id === activeDayId);
+
+  if (!activeDay) {
+    setDayHistoryStatus('Day tabs loaded.');
+    return;
+  }
+
+  if (activeDay.kind === 'uploaded' && activeDay.hasPath) {
+    const dayLabel = activeDay.date ? `${activeDay.title} (${activeDay.date})` : activeDay.title;
+    setDayHistoryStatus(`Active day: ${dayLabel}. Uploaded path overlay is enabled on the map.`);
+    return;
+  }
+
+  setDayHistoryStatus(`Active day: ${activeDay.title}. Upload GPX/KML/GeoJSON to add a day path overlay.`);
+}
+
+async function handlePathUpload(file) {
+  if (!file) return;
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const requestedDate = window.prompt('Day date (YYYY-MM-DD)', todayIso);
+  if (requestedDate === null) return;
+  const trimmedDate = requestedDate.trim();
+  if (trimmedDate && !isIsoDay(trimmedDate)) {
+    setDayHistoryStatus('Upload failed: date must use YYYY-MM-DD format.');
+    return;
+  }
+
+  const defaultTitle = trimmedDate ? `Day ${trimmedDate}` : file.name.replace(/\.[^.]+$/, '');
+  const requestedTitle = window.prompt('Day label for tab', defaultTitle);
+  if (requestedTitle === null) return;
+  const trimmedTitle = requestedTitle.trim();
+
+  try {
+    setDayHistoryStatus(`Uploading ${file.name}...`);
+    const saved = await saveUploadedPath(file, {
+      date: trimmedDate || undefined,
+      title: trimmedTitle || undefined,
+    });
+
+    activeDayId = setActiveDay(saved.day.id);
+    await refreshActiveDayPath();
+    renderDayTabs();
+    setDaySummaryStatus();
+    await renderMap(activeConfig);
+  } catch (error) {
+    setDayHistoryStatus(`Upload failed: ${error.message}`);
+  }
+}
+
+function wireDayHistoryUi() {
+  const uploadInput = document.getElementById('upload-day-path-input');
+  const uploadButton = document.getElementById('upload-day-path-btn');
+
+  uploadButton?.addEventListener('click', () => {
+    uploadInput?.click();
+  });
+
+  uploadInput?.addEventListener('change', async () => {
+    const [file] = uploadInput.files || [];
+    await handlePathUpload(file);
+    uploadInput.value = '';
+  });
+}
+
 function getStepColor(config, stepId, fallback) {
   const step = config.steps.find((item) => item.id === stepId);
   if (step?.color) return step.color;
@@ -1243,7 +1381,58 @@ function buildGeometry(config, stopsById, staticPointsById) {
   return { parkWaypoints, routes, zones };
 }
 
-function renderLegend(steps) {
+function extractLineCoordsFromGeometry(geometry) {
+  if (!geometry || typeof geometry !== 'object') return [];
+
+  if (geometry.type === 'LineString') {
+    return [normalizeCoordList((geometry.coordinates || []).map((coord) => [coord[1], coord[0]]))];
+  }
+
+  if (geometry.type === 'MultiLineString') {
+    return (Array.isArray(geometry.coordinates) ? geometry.coordinates : []).map((line) =>
+      normalizeCoordList((line || []).map((coord) => [coord[1], coord[0]])),
+    );
+  }
+
+  if (geometry.type === 'GeometryCollection') {
+    const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
+    return geometries.flatMap((item) => extractLineCoordsFromGeometry(item));
+  }
+
+  return [];
+}
+
+function buildUploadedPathRoutes(config, featureCollection) {
+  if (!featureCollection || featureCollection.type !== 'FeatureCollection') return [];
+  if (!Array.isArray(featureCollection.features)) return [];
+
+  const stepIds = config.steps.map((step) => step.id);
+  let index = 0;
+
+  const routes = [];
+  for (const feature of featureCollection.features) {
+    const lines = extractLineCoordsFromGeometry(feature?.geometry);
+    for (const line of lines) {
+      if (line.length < 2) continue;
+
+      routes.push({
+        id: `uploaded-path-${index}`,
+        name: 'Uploaded Day Path',
+        time: '',
+        note: 'Path uploaded from your phone file.',
+        stepIds,
+        color: UPLOADED_PATH_COLOR,
+        dashed: true,
+        coords: line,
+      });
+      index += 1;
+    }
+  }
+
+  return routes;
+}
+
+function renderLegend(steps, hasUploadedPath = false) {
   const legend = document.getElementById('legend');
   const lines = steps
     .map((step) => {
@@ -1256,7 +1445,16 @@ function renderLegend(steps) {
     })
     .join('');
 
-  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}`;
+  const uploadedLine = hasUploadedPath
+    ? `
+      <div class="legend-row">
+        <span class="legend-chip" style="background:${UPLOADED_PATH_COLOR}"></span>
+        <span>Uploaded day path</span>
+      </div>
+    `
+    : '';
+
+  legend.innerHTML = `<p class="legend-title">Itinerary Steps</p>${lines}${uploadedLine}`;
 }
 
 function renderItineraryList(steps, onSelect, completedView) {
@@ -1489,10 +1687,12 @@ async function renderMap(config) {
   const staticPointsById = new Map(staticPoints.map((point) => [point.id, point]));
 
   const { parkWaypoints, routes, zones } = buildGeometry(config, stopsById, staticPointsById);
+  const uploadedPathRoutes = buildUploadedPathRoutes(config, activeDayPathGeoJSON);
+  const combinedRoutes = [...routes, ...uploadedPathRoutes];
 
-  renderLegend(config.steps);
+  renderLegend(config.steps, uploadedPathRoutes.length > 0);
 
-  for (const route of routes) {
+  for (const route of combinedRoutes) {
     renderer.addRoute(route.stepIds, route);
   }
 
@@ -1535,7 +1735,9 @@ async function renderMap(config) {
     .map((stop) => `${stop.name}: ${stop.geocodeSource}`)
     .join(' | ');
 
-  setStatus(`Loaded. Geocode sources -> ${sourceSummary}`);
+  const uploadedSummary =
+    uploadedPathRoutes.length > 0 ? ` | Uploaded path segments: ${uploadedPathRoutes.length}` : '';
+  setStatus(`Loaded. Geocode sources -> ${sourceSummary}${uploadedSummary}`);
   setControlsDisabled(false);
 }
 
@@ -1594,10 +1796,28 @@ function wireEvents() {
   document.getElementById('download-btn').addEventListener('click', exportMapImage);
   document.getElementById('apply-updates-btn').addEventListener('click', applyEditorPatch);
   document.getElementById('reset-updates-btn').addEventListener('click', resetEditorTemplate);
+  wireDayHistoryUi();
 }
 
 async function init() {
   wireEvents();
+  loadDayHistory();
+
+  const queryDay = new URLSearchParams(window.location.search).get('day')?.trim();
+  const availableDayIds = new Set(listDays().map((day) => day.id));
+
+  if (queryDay && availableDayIds.has(queryDay)) {
+    activeDayId = setActiveDay(queryDay);
+  } else {
+    activeDayId = getActiveDay();
+    if (!availableDayIds.has(activeDayId)) {
+      activeDayId = setActiveDay('friday');
+    }
+  }
+
+  await refreshActiveDayPath();
+  renderDayTabs();
+  setDaySummaryStatus();
 
   const storedPatch = getStoredPatch();
   const startingPatch = storedPatch || buildDefaultPatchTemplate(BASE_ITINERARY);

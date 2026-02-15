@@ -6,9 +6,9 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "lint": "node --check src/main.js && node --check src/itinerary.js",
+    "lint": "node --check src/main.js && node --check src/itinerary.js && node --check shared/day-history.js",
     "test": "node --test",
-    "build": "vite build && mkdir -p dist/saturday && cp saturday/index.html dist/saturday/index.html && cp saturday/README.md dist/saturday/README.md",
+    "build": "vite build && mkdir -p dist/saturday dist/shared && cp saturday/index.html dist/saturday/index.html && cp saturday/README.md dist/saturday/README.md && cp shared/day-history.js dist/shared/day-history.js",
     "preview": "vite preview"
   },
   "dependencies": {

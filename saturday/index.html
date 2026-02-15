@@ -261,6 +261,67 @@
         line-height: 1.35;
       }
 
+      .day-history {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px;
+        box-shadow: 0 8px 18px rgba(21, 34, 47, 0.06);
+      }
+
+      .day-tabs-wrap {
+        overflow-x: auto;
+      }
+
+      .day-tabs {
+        display: inline-flex;
+        gap: 6px;
+        min-width: 100%;
+      }
+
+      .day-tab {
+        border: 1px solid #cad7e1;
+        border-radius: 999px;
+        background: #f8fcff;
+        color: #294e67;
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 6px 10px;
+        white-space: nowrap;
+      }
+
+      .day-tab.active {
+        background: #2f6f8f;
+        border-color: #2f6f8f;
+        color: #f3fbff;
+      }
+
+      .day-actions {
+        margin-top: 8px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .upload-btn {
+        border: none;
+        border-radius: 10px;
+        padding: 9px 11px;
+        background: #2f6f8f;
+        color: #f5fbff;
+        font-size: 0.84rem;
+        font-weight: 700;
+        width: fit-content;
+        cursor: pointer;
+      }
+
+      .day-status {
+        margin-top: 8px;
+        color: #4f616f;
+        font-size: 0.8rem;
+        line-height: 1.35;
+      }
+
       @media (min-width: 760px) {
         .chips {
           grid-template-columns: repeat(3, 1fr);
@@ -274,6 +335,23 @@
   </head>
   <body>
     <main class="wrap">
+      <section class="day-history" aria-label="Day history">
+        <div class="day-tabs-wrap">
+          <nav id="day-tabs" class="day-tabs" aria-label="Day tabs"></nav>
+        </div>
+        <div class="day-actions">
+          <button id="upload-day-path-btn" class="upload-btn" type="button">Upload Day Path</button>
+          <input
+            id="upload-day-path-input"
+            type="file"
+            accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/vnd.google-earth.kml+xml,application/geo+json,application/json"
+            hidden
+          />
+        </div>
+        <p id="day-status" class="day-status">Upload GPX/KML/GeoJSON from Files to add a day tab.</p>
+        <p id="view-on-map-wrap" class="day-status"></p>
+      </section>
+
       <section class="top">
         <h1 class="title">Saturday Online Guide</h1>
         <p class="subtitle">
@@ -484,20 +562,133 @@
       </section>
     </main>
 
-    <script>
-      (function () {
-        const copyBtn = document.getElementById('copy-link-btn');
-        const status = document.getElementById('copy-status');
-        const allStopsLink = document.getElementById('all-stops-link');
+    <script type="module">
+      import { getActiveDay, listDays, saveUploadedPath, setActiveDay } from "../shared/day-history.js";
 
-        copyBtn.addEventListener('click', async function () {
+      (function () {
+        const copyBtn = document.getElementById("copy-link-btn");
+        const copyStatus = document.getElementById("copy-status");
+        const allStopsLink = document.getElementById("all-stops-link");
+        const tabsContainer = document.getElementById("day-tabs");
+        const statusEl = document.getElementById("day-status");
+        const viewWrapEl = document.getElementById("view-on-map-wrap");
+        const uploadBtn = document.getElementById("upload-day-path-btn");
+        const uploadInput = document.getElementById("upload-day-path-input");
+
+        function isIsoDay(value) {
+          return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value.trim());
+        }
+
+        function getDayHref(day) {
+          if (day.kind === "uploaded") return "/?day=" + encodeURIComponent(day.id);
+          return day.href || "/";
+        }
+
+        function setStatus(message) {
+          statusEl.textContent = message;
+        }
+
+        function renderViewOnMap() {
+          const activeId = getActiveDay();
+          const activeDay = listDays().find((day) => day.id === activeId);
+          if (!activeDay || activeDay.kind !== "uploaded") {
+            viewWrapEl.innerHTML = "";
+            return;
+          }
+
+          viewWrapEl.innerHTML =
+            'Mapped day ready: <a href="/?day=' +
+            encodeURIComponent(activeDay.id) +
+            '">View on map</a>';
+        }
+
+        function renderTabs() {
+          const activeId = getActiveDay();
+          const days = listDays();
+          tabsContainer.innerHTML = "";
+
+          for (const day of days) {
+            const link = document.createElement("a");
+            link.className = "day-tab";
+            if (day.id === activeId) link.classList.add("active");
+            link.textContent = day.title;
+            link.href = getDayHref(day);
+
+            link.addEventListener("click", function (event) {
+              if (day.kind === "uploaded") {
+                event.preventDefault();
+                setActiveDay(day.id);
+                window.location.href = "/?day=" + encodeURIComponent(day.id);
+                return;
+              }
+
+              if (day.id === "friday") {
+                event.preventDefault();
+                setActiveDay("friday");
+                window.location.href = "/";
+                return;
+              }
+
+              setActiveDay("saturday");
+            });
+
+            tabsContainer.appendChild(link);
+          }
+        }
+
+        async function handleUpload(file) {
+          if (!file) return;
+
+          const todayIso = new Date().toISOString().slice(0, 10);
+          const requestedDate = window.prompt("Day date (YYYY-MM-DD)", todayIso);
+          if (requestedDate === null) return;
+          const dayDate = requestedDate.trim();
+          if (dayDate && !isIsoDay(dayDate)) {
+            setStatus("Upload failed: date must use YYYY-MM-DD format.");
+            return;
+          }
+
+          const suggestedTitle = dayDate ? "Day " + dayDate : file.name.replace(/\.[^.]+$/, "");
+          const requestedTitle = window.prompt("Day label for tab", suggestedTitle);
+          if (requestedTitle === null) return;
+          const dayTitle = requestedTitle.trim();
+
+          try {
+            setStatus("Uploading " + file.name + "...");
+            const result = await saveUploadedPath(file, {
+              date: dayDate || undefined,
+              title: dayTitle || undefined,
+            });
+            setActiveDay(result.day.id);
+            renderTabs();
+            renderViewOnMap();
+            setStatus("Upload complete: " + result.day.title + ".");
+          } catch (error) {
+            setStatus("Upload failed: " + error.message);
+          }
+        }
+
+        copyBtn.addEventListener("click", async function () {
           try {
             await navigator.clipboard.writeText(allStopsLink.href);
-            status.textContent = 'Link copied.';
+            copyStatus.textContent = "Link copied.";
           } catch (err) {
-            status.textContent = 'Copy failed. Use the Open button instead.';
+            copyStatus.textContent = "Copy failed. Use the Open button instead.";
           }
         });
+
+        uploadBtn.addEventListener("click", function () {
+          uploadInput.click();
+        });
+
+        uploadInput.addEventListener("change", async function () {
+          const file = (uploadInput.files || [])[0];
+          await handleUpload(file);
+          uploadInput.value = "";
+        });
+
+        renderTabs();
+        renderViewOnMap();
       })();
     </script>
   </body>

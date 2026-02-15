@@ -18,6 +18,17 @@ Then open `http://localhost:8000/saturday/`.
 2. Edit stop content in the `Stops` card block (name, address, time, notes).
 3. Edit transport language in `Transit by major leg`.
 4. Update the consolidated route URL in the `Consolidated map` section (anchor with `id="all-stops-link"`).
+5. Day tabs/upload UI is near the top (`id="day-tabs"` and `id="upload-day-path-btn"`). Uploaded days link back to `/?day=<dayId>` on the root map page.
+
+## iPhone upload notes
+
+1. Export your track to Files as `GPX`, `KML`, or `GeoJSON`.
+2. Open `/saturday/` on iPhone Safari.
+3. Tap `Upload Day Path` and choose the file from Files/iCloud Drive.
+4. Enter day date + tab label when prompted.
+5. Tap the uploaded day tab or `View on map` to jump to `/?day=<dayId>`.
+
+Storage is local-only (`localStorage` + `IndexedDB`) and can be cleared by browser/site data reset.
 
 ## Sources
 

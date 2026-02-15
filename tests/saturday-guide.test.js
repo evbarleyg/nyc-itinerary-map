@@ -66,3 +66,16 @@ test('consolidated maps link includes ordered route segments', () => {
   assert.match(href, /New\+York\+Comedy\+Club\+Midtown/);
   assert.match(href, /destination=Frank/);
 });
+
+test('day history tabs and upload controls are present', () => {
+  const html = readGuide();
+
+  assert.match(html, /id="day-tabs"/);
+  assert.match(html, /id="upload-day-path-btn"/);
+  assert.match(html, /id="upload-day-path-input"/);
+});
+
+test('saturday guide includes view-on-map uploaded day link pattern', () => {
+  const html = readGuide();
+  assert.match(html, /\/\?day=/);
+});
