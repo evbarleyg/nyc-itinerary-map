@@ -67,26 +67,28 @@ test('Saturday resolves to Roosevelt Island actuals in map config', async () => 
   });
 });
 
-test('Sunday tentative split and open-ended dinner are retained', async () => {
+test('Sunday bridge/chelsea/pastis plan is retained with curated routing', async () => {
   await withMockedFetch(async () => {
     const trip = await loadTripData();
     const sunday = getDayById(trip, 'sunday');
     assert.ok(sunday, 'Missing Sunday day');
 
     const tentativeTwoPm = sunday.items.filter((item) => item.start_time === '14:00');
-    assert.equal(tentativeTwoPm.length, 2);
-    assert.ok(tentativeTwoPm.every((item) => item.status === 'tentative'));
+    assert.equal(tentativeTwoPm.length, 1);
+    assert.equal(tentativeTwoPm[0]?.title, 'Meet Nathaniel');
+    assert.ok(sunday.items.every((item) => item.status === 'tentative'));
 
-    const dinner = sunday.items.find((item) => item.title === 'Dinner: Pastis');
-    assert.ok(dinner, 'Missing Pastis dinner item');
+    const dinner = sunday.items.find((item) => item.title === 'Meet Lindsay and Maci');
+    assert.ok(dinner, 'Missing Pastis meetup item');
     assert.equal(dinner.end_time, null);
     assert.equal(dinner.locations?.[0]?.address, '52 Gansevoort St, New York, NY 10014');
 
     const config = buildMapConfigFromDay(sunday, trip);
     const stepMeta = config.steps.map((step) => step.meta).join(' | ');
     assert.match(stepMeta, /Tentative/);
-    assert.ok(config.routes.some((route) => /Branch A: Vineapple -> Maci Broadway/.test(route.name)));
-    assert.ok(config.routes.some((route) => /Branch B: Vineapple -> Nathaniel hangout/.test(route.name)));
-    assert.ok(config.routes.some((route) => /Transfer: Broadway -> Pastis dinner/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Walk: Brooklyn Bridge \(to Brooklyn\)/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Walk: Brooklyn Bridge \(back to Manhattan\)/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Transfer: Brooklyn Bridge -> Chelsea/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Transfer: Chelsea -> Pastis dinner/.test(route.name)));
   });
 });

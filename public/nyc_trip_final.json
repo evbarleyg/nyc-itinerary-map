@@ -1,7 +1,7 @@
 {
   "trip_name": "NYC Weekend",
   "timezone": "America/New_York",
-  "last_updated": "2026-02-15T14:15:00-05:00",
+  "last_updated": "2026-02-15T14:44:02.152844",
   "days": [
     {
       "date": "2026-02-13",
@@ -305,15 +305,15 @@
     },
     {
       "date": "2026-02-15",
-      "title": "Sunday tentative: Bridge + Vineapple + Broadway + Pastis",
+      "title": "Sunday tentative: Bridge + Vineapple + Chelsea + Pastis",
       "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
       "items": [
         {
           "start_time": "09:45",
           "end_time": "10:10",
-          "title": "Subway to Brooklyn Bridge-City Hall",
+          "title": "Subway to Brooklyn Bridge–City Hall",
           "type": "transit",
-          "notes": "Downtown subway transfer to bridge approach.",
+          "notes": "Take 4/5 downtown from 59th St.",
           "status": "tentative",
           "locations": [
             {
@@ -325,9 +325,9 @@
         {
           "start_time": "10:10",
           "end_time": "10:50",
-          "title": "Walk Brooklyn Bridge (Manhattan -> Brooklyn)",
+          "title": "Walk Brooklyn Bridge (Manhattan → Brooklyn)",
           "type": "sightseeing",
-          "notes": "Relaxed crossing with photo stops before brunch.",
+          "notes": "",
           "status": "tentative",
           "locations": [
             {
@@ -345,8 +345,8 @@
           "end_time": "12:15",
           "title": "Brunch",
           "type": "dining",
+          "notes": "",
           "status": "tentative",
-          "notes": "Target brunch at Vineapple.",
           "locations": [
             {
               "name": "Vineapple",
@@ -355,40 +355,58 @@
           ]
         },
         {
-          "start_time": "14:00",
-          "end_time": "16:30",
-          "title": "Maci: Broadway show",
-          "type": "event",
+          "start_time": "12:15",
+          "end_time": "12:45",
+          "title": "Walk Brooklyn Bridge (Brooklyn → Manhattan)",
+          "type": "sightseeing",
+          "notes": "",
           "status": "tentative",
-          "notes": "Maci at Chicago on Broadway (tentative timing).",
           "locations": [
             {
-              "name": "Ambassador Theatre (Chicago on Broadway)",
-              "address": "219 W 49th St, New York, NY 10019"
+              "name": "Brooklyn Bridge Park (DUMBO side)",
+              "address": "334 Furman St, Brooklyn, NY 11201"
+            },
+            {
+              "name": "Brooklyn Bridge Pedestrian Entrance (Manhattan side)",
+              "address": "Brooklyn Bridge Pedestrian Walkway Entrance near City Hall, New York, NY"
+            }
+          ]
+        },
+        {
+          "start_time": "13:15",
+          "end_time": "14:00",
+          "title": "Transit to Chelsea",
+          "type": "transit",
+          "notes": "Take C train to 23rd St, walk west to 515 W 23rd St.",
+          "status": "tentative",
+          "locations": [
+            {
+              "name": "West Chelsea",
+              "address": "515 W 23rd St, New York, NY 10011"
             }
           ]
         },
         {
           "start_time": "14:00",
-          "end_time": "16:30",
-          "title": "You + Nathaniel hangout (tentative)",
-          "type": "walk",
+          "end_time": "17:00",
+          "title": "Meet Nathaniel",
+          "type": "social",
+          "notes": "",
           "status": "tentative",
-          "notes": "Flexible nearby meetup while theater is running.",
           "locations": [
             {
-              "name": "Bryant Park",
-              "address": "Bryant Park, New York, NY 10018"
+              "name": "West Chelsea",
+              "address": "515 W 23rd St, New York, NY 10011"
             }
           ]
         },
         {
-          "start_time": "18:30",
+          "start_time": "17:15",
           "end_time": null,
-          "title": "Dinner: Pastis",
+          "title": "Meet Lindsay and Maci",
           "type": "dining",
+          "notes": "",
           "status": "tentative",
-          "notes": "Dinner together at Pastis after Broadway and afternoon split.",
           "locations": [
             {
               "name": "Pastis",

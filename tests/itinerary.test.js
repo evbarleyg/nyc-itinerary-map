@@ -63,15 +63,17 @@ test('saturday includes Roosevelt Island actuals and Frank dinner', () => {
   assert.match(frankAddress, /88 2nd Ave, New York, NY 10003/);
 });
 
-test('sunday includes Vineapple and tentative 2:00 split', () => {
+test('sunday includes bridge, chelsea, and pastis flow', () => {
   const sunday = tripData.days.find((day) => day.date === '2026-02-15');
   assert.ok(sunday, 'Missing Sunday day');
 
   const titles = sunday.items.map((item) => item.title);
+  assert.ok(titles.includes('Subway to Brooklyn Bridge–City Hall'));
+  assert.ok(titles.includes('Walk Brooklyn Bridge (Manhattan → Brooklyn)'));
   assert.ok(titles.includes('Brunch'));
-  assert.ok(titles.includes('Maci: Broadway show'));
-  assert.ok(titles.includes('You + Nathaniel hangout (tentative)'));
-  assert.ok(titles.includes('Dinner: Pastis'));
+  assert.ok(titles.includes('Transit to Chelsea'));
+  assert.ok(titles.includes('Meet Nathaniel'));
+  assert.ok(titles.includes('Meet Lindsay and Maci'));
 });
 
 test('root page includes full-day path toggle control', () => {

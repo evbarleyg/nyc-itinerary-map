@@ -28,6 +28,7 @@ const TYPE_COLOR = Object.freeze({
   drinks: '#86543a',
   rest: '#54758a',
   transit: '#2f5d8a',
+  social: '#5e6f87',
   event: '#6d4d8f',
 });
 
@@ -65,6 +66,7 @@ const KNOWN_COORDS = new Map(
     'brooklyn bridge city hall station, new york, ny 10007': [40.713065, -74.004131],
     '334 furman st, brooklyn, ny 11201': [40.699216, -73.997027],
     '71 pineapple st, brooklyn, ny 11201': [40.695694, -73.994334],
+    '515 w 23rd st, new york, ny 10011': [40.748063, -74.004774],
     '219 w 49th st, new york, ny 10019': [40.76047, -73.983921],
     'bryant park, new york, ny 10018': [40.753597, -73.983233],
     '52 gansevoort st, new york, ny 10014': [40.739908, -74.005786],
@@ -457,26 +459,27 @@ function buildSaturdayCuratedRoutes(stepStops) {
 
 function buildSundayCuratedRoutes(stepStops) {
   const subwayStep = findStepByTitle(stepStops, /subway to brooklyn bridge/);
-  const bridgeStep = findStepByTitle(stepStops, /walk brooklyn bridge/);
+  const bridgeOutStep = findStepByTitle(stepStops, /walk brooklyn bridge.*manhattan.*brooklyn/);
   const brunchStep = findStepByTitle(stepStops, /brunch/);
-  const maciStep = findStepByTitle(stepStops, /maci|broadway/);
+  const bridgeBackStep = findStepByTitle(stepStops, /walk brooklyn bridge.*brooklyn.*manhattan/);
+  const chelseaStep = findStepByTitle(stepStops, /transit to chelsea/);
   const nathanielStep = findStepByTitle(stepStops, /nathaniel/);
-  const dinnerStep = findStepByTitle(stepStops, /pastis|dinner/);
+  const dinnerStep = findStepByTitle(stepStops, /pastis|meet lindsay and maci|dinner/);
 
   const routes = [];
 
-  if (subwayStep && bridgeStep && firstStopId(subwayStep) && firstStopId(bridgeStep)) {
+  if (subwayStep && bridgeOutStep && firstStopId(subwayStep) && firstStopId(bridgeOutStep)) {
     routes.push(
       makeRoute({
         id: 'sunday-curated-subway-to-bridge',
         name: 'Transfer: Subway -> Brooklyn Bridge entrance',
-        time: `${subwayStep.time} -> ${bridgeStep.time}`,
+        time: `${subwayStep.time} -> ${bridgeOutStep.time}`,
         note: 'Short handoff from station to bridge walkway.',
-        stepId: bridgeStep.stepId,
-        color: bridgeStep.color,
+        stepId: bridgeOutStep.stepId,
+        color: bridgeOutStep.color,
         dashed: true,
         fromStopId: firstStopId(subwayStep),
-        toStopId: firstStopId(bridgeStep),
+        toStopId: firstStopId(bridgeOutStep),
         coords: [
           [40.713065, -74.004131],
           [40.712628, -74.00528],
@@ -485,18 +488,18 @@ function buildSundayCuratedRoutes(stepStops) {
     );
   }
 
-  if (bridgeStep && firstStopId(bridgeStep) && lastStopId(bridgeStep)) {
+  if (bridgeOutStep && firstStopId(bridgeOutStep) && lastStopId(bridgeOutStep)) {
     routes.push(
       makeRoute({
-        id: 'sunday-curated-bridge-walk',
-        name: 'Walk: Brooklyn Bridge',
-        time: bridgeStep.time,
+        id: 'sunday-curated-bridge-to-brooklyn',
+        name: 'Walk: Brooklyn Bridge (to Brooklyn)',
+        time: bridgeOutStep.time,
         note: 'Curated Manhattan-to-Brooklyn bridge walking line.',
-        stepId: bridgeStep.stepId,
-        color: bridgeStep.color,
+        stepId: bridgeOutStep.stepId,
+        color: bridgeOutStep.color,
         dashed: false,
-        fromStopId: firstStopId(bridgeStep),
-        toStopId: lastStopId(bridgeStep),
+        fromStopId: firstStopId(bridgeOutStep),
+        toStopId: lastStopId(bridgeOutStep),
         coords: [
           [40.712628, -74.00528],
           [40.70675, -74.00371],
@@ -507,17 +510,17 @@ function buildSundayCuratedRoutes(stepStops) {
     );
   }
 
-  if (bridgeStep && brunchStep && lastStopId(bridgeStep) && firstStopId(brunchStep)) {
+  if (bridgeOutStep && brunchStep && lastStopId(bridgeOutStep) && firstStopId(brunchStep)) {
     routes.push(
       makeRoute({
         id: 'sunday-curated-bridge-to-brunch',
         name: 'Transfer: Bridge -> Vineapple',
-        time: `${bridgeStep.time} -> ${brunchStep.time}`,
+        time: `${bridgeOutStep.time} -> ${brunchStep.time}`,
         note: 'Short DUMBO to brunch transfer.',
         stepId: brunchStep.stepId,
         color: brunchStep.color,
         dashed: false,
-        fromStopId: lastStopId(bridgeStep),
+        fromStopId: lastStopId(bridgeOutStep),
         toStopId: firstStopId(brunchStep),
         coords: [
           [40.699216, -73.997027],
@@ -528,67 +531,67 @@ function buildSundayCuratedRoutes(stepStops) {
     );
   }
 
-  if (brunchStep && maciStep && firstStopId(brunchStep) && firstStopId(maciStep)) {
+  if (brunchStep && bridgeBackStep && firstStopId(brunchStep) && firstStopId(bridgeBackStep)) {
     routes.push(
       makeRoute({
-        id: 'sunday-curated-brunch-to-broadway',
-        name: 'Branch A: Vineapple -> Maci Broadway',
-        time: `${brunchStep.time} -> ${maciStep.time}`,
-        note: 'Explicit Broadway branch route.',
-        stepId: maciStep.stepId,
-        color: maciStep.color,
-        dashed: true,
+        id: 'sunday-curated-brunch-to-bridge-return',
+        name: 'Transfer: Vineapple -> Brooklyn Bridge return',
+        time: `${brunchStep.time} -> ${bridgeBackStep.time}`,
+        note: 'Head back to the bridge from brunch.',
+        stepId: bridgeBackStep.stepId,
+        color: bridgeBackStep.color,
+        dashed: false,
         fromStopId: firstStopId(brunchStep),
-        toStopId: firstStopId(maciStep),
+        toStopId: firstStopId(bridgeBackStep),
         coords: [
           [40.695694, -73.994334],
-          [40.7187, -73.9903],
-          [40.7428, -73.9892],
-          [40.76047, -73.983921],
+          [40.69785, -73.9958],
+          [40.699216, -73.997027],
         ],
       }),
     );
   }
 
-  if (brunchStep && nathanielStep && firstStopId(brunchStep) && firstStopId(nathanielStep)) {
+  if (bridgeBackStep && firstStopId(bridgeBackStep) && lastStopId(bridgeBackStep)) {
     routes.push(
       makeRoute({
-        id: 'sunday-curated-brunch-to-hangout',
-        name: 'Branch B: Vineapple -> Nathaniel hangout',
-        time: `${brunchStep.time} -> ${nathanielStep.time}`,
-        note: 'Explicit parallel hangout branch route.',
-        stepId: nathanielStep.stepId,
-        color: nathanielStep.color,
-        dashed: true,
-        fromStopId: firstStopId(brunchStep),
-        toStopId: firstStopId(nathanielStep),
+        id: 'sunday-curated-bridge-to-manhattan',
+        name: 'Walk: Brooklyn Bridge (back to Manhattan)',
+        time: bridgeBackStep.time,
+        note: 'Curated Brooklyn-to-Manhattan bridge walking line.',
+        stepId: bridgeBackStep.stepId,
+        color: bridgeBackStep.color,
+        dashed: false,
+        fromStopId: firstStopId(bridgeBackStep),
+        toStopId: lastStopId(bridgeBackStep),
         coords: [
-          [40.695694, -73.994334],
-          [40.7152, -73.993],
-          [40.7348, -73.9887],
-          [40.753597, -73.983233],
+          [40.699216, -73.997027],
+          [40.70402, -73.99943],
+          [40.70675, -74.00371],
+          [40.712628, -74.00528],
         ],
       }),
     );
   }
 
-  if (maciStep && dinnerStep && firstStopId(maciStep) && firstStopId(dinnerStep)) {
+  if (bridgeBackStep && chelseaStep && lastStopId(bridgeBackStep) && firstStopId(chelseaStep)) {
     routes.push(
       makeRoute({
-        id: 'sunday-curated-broadway-to-pastis',
-        name: 'Transfer: Broadway -> Pastis dinner',
-        time: `${maciStep.time} -> ${dinnerStep.time}`,
-        note: 'Post-show route to dinner.',
-        stepId: dinnerStep.stepId,
-        color: dinnerStep.color,
+        id: 'sunday-curated-bridge-to-chelsea',
+        name: 'Transfer: Brooklyn Bridge -> Chelsea',
+        time: `${bridgeBackStep.time} -> ${chelseaStep.time}`,
+        note: 'Subway/ride transfer to West Chelsea.',
+        stepId: chelseaStep.stepId,
+        color: chelseaStep.color,
         dashed: true,
-        fromStopId: firstStopId(maciStep),
-        toStopId: firstStopId(dinnerStep),
+        fromStopId: lastStopId(bridgeBackStep),
+        toStopId: firstStopId(chelseaStep),
         coords: [
-          [40.76047, -73.983921],
-          [40.752, -73.9872],
-          [40.7425, -74.0056],
-          [40.739908, -74.005786],
+          [40.712628, -74.00528],
+          [40.7192, -74.0026],
+          [40.7324, -74.0037],
+          [40.7413, -74.0043],
+          [40.748063, -74.004774],
         ],
       }),
     );
@@ -597,8 +600,8 @@ function buildSundayCuratedRoutes(stepStops) {
   if (nathanielStep && dinnerStep && firstStopId(nathanielStep) && firstStopId(dinnerStep)) {
     routes.push(
       makeRoute({
-        id: 'sunday-curated-hangout-to-pastis',
-        name: 'Transfer: Nathaniel hangout -> Pastis dinner',
+        id: 'sunday-curated-chelsea-to-pastis',
+        name: 'Transfer: Chelsea -> Pastis dinner',
         time: `${nathanielStep.time} -> ${dinnerStep.time}`,
         note: 'Meet back up for dinner.',
         stepId: dinnerStep.stepId,
@@ -607,8 +610,8 @@ function buildSundayCuratedRoutes(stepStops) {
         fromStopId: firstStopId(nathanielStep),
         toStopId: firstStopId(dinnerStep),
         coords: [
-          [40.753597, -73.983233],
-          [40.7489, -73.9932],
+          [40.748063, -74.004774],
+          [40.7448, -74.0049],
           [40.7443, -74.0016],
           [40.739908, -74.005786],
         ],
