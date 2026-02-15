@@ -432,62 +432,6 @@ body {
   font-size: 0.82rem;
 }
 
-.mapboxgl-popup-content {
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-
-.mb-stop-marker {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid #ffffff;
-  box-shadow: 0 1px 8px rgba(18, 32, 45, 0.35);
-  transition: transform 120ms ease, opacity 120ms ease;
-}
-
-.mb-stop-marker.is-active {
-  transform: scale(1.35);
-}
-
-.mb-stop-marker.is-dim {
-  opacity: 0.36;
-}
-
-.mb-waypoint {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  pointer-events: auto;
-  transition: opacity 120ms ease;
-}
-
-.mb-waypoint .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  border: 1px solid #2f5f4f;
-  background: #e9f7ef;
-}
-
-.mb-waypoint .label {
-  border: 1px solid #bfd2c8;
-  background: #f3faf5;
-  color: #33584a;
-  font-size: 0.72rem;
-  padding: 1px 5px;
-  border-radius: 8px;
-  white-space: nowrap;
-}
-
-.mb-waypoint.is-active .label {
-  border-color: #89b4a0;
-}
-
-.mb-waypoint.is-dim {
-  opacity: 0.34;
-}
-
 @media (max-width: 980px) {
   .day-history-actions {
     grid-template-columns: 1fr;

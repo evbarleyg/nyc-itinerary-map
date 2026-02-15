@@ -1,7 +1,5 @@
 import 'leaflet/dist/leaflet.css';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import L from 'leaflet';
-import mapboxgl from 'mapbox-gl';
 import html2canvas from 'html2canvas';
 import {
   FINAL_GOOGLE_MAPS_URL,
@@ -19,7 +17,6 @@ import {
 } from '../shared/day-history.js';
 import './styles.css';
 
-const MAPBOX_TOKEN = (import.meta.env.MAPBOX_TOKEN || import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
 const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
 const UPLOADED_PATH_COLOR = '#8c3f13';
 const APP_BASE_URL = ensureTrailingSlash(import.meta.env.BASE_URL || '/');
@@ -679,304 +676,6 @@ class LeafletRenderer {
   fitToData() {
     if (this.bounds.isValid()) {
       this.map.fitBounds(this.bounds.pad(0.08));
-    }
-  }
-}
-
-class MapboxRenderer {
-  constructor(containerId, token) {
-    this.mode = 'mapbox';
-    mapboxgl.accessToken = token;
-
-    this.map = new mapboxgl.Map({
-      container: containerId,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [-73.975, 40.764],
-      zoom: 12.5,
-      preserveDrawingBuffer: true,
-    });
-
-    this.map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
-
-    this.featureRegistry = [];
-    this.featuresByStep = new Map();
-    this.bounds = new mapboxgl.LngLatBounds();
-    this.sourceCounter = 0;
-
-    this.readyPromise = new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('Mapbox load timeout')), 10000);
-
-      this.map.on('load', () => {
-        clearTimeout(timer);
-        resolve();
-      });
-
-      this.map.once('error', (evt) => {
-        if (!this.map.isStyleLoaded()) {
-          clearTimeout(timer);
-          reject(evt.error || new Error('Mapbox failed to initialize'));
-        }
-      });
-    });
-  }
-
-  whenReady() {
-    return this.readyPromise;
-  }
-
-  destroy() {
-    if (this.map) {
-      this.map.remove();
-    }
-    this.featureRegistry = [];
-    this.featuresByStep.clear();
-  }
-
-  registerFeature(stepIds, feature) {
-    this.featureRegistry.push(feature);
-
-    for (const stepId of stepIds || []) {
-      if (!this.featuresByStep.has(stepId)) this.featuresByStep.set(stepId, []);
-      this.featuresByStep.get(stepId).push(feature);
-    }
-  }
-
-  extendBounds(coord) {
-    if (isValidCoord(coord)) {
-      this.bounds.extend([coord[1], coord[0]]);
-    }
-  }
-
-  addStop(stepIds, stop) {
-    const el = document.createElement('div');
-    el.className = 'mb-stop-marker';
-    el.style.background = stop.markerColor || '#4a6279';
-
-    const marker = new mapboxgl.Marker({ element: el, anchor: 'center' })
-      .setLngLat([stop.coord[1], stop.coord[0]])
-      .setPopup(new mapboxgl.Popup({ offset: 14, maxWidth: '300px' }).setHTML(buildStopPopup(stop)))
-      .addTo(this.map);
-
-    this.extendBounds(stop.coord);
-
-    const feature = {
-      setState: (state) => {
-        el.classList.remove('is-active', 'is-dim');
-        if (state === 'active') {
-          el.classList.add('is-active');
-        } else if (state === 'dim') {
-          el.classList.add('is-dim');
-        }
-      },
-      cleanup: () => marker.remove(),
-    };
-
-    this.registerFeature(stepIds, feature);
-  }
-
-  addWaypoint(stepIds, waypoint) {
-    const el = document.createElement('div');
-    el.className = 'mb-waypoint';
-    el.innerHTML = '<span class="dot"></span><span class="label"></span>';
-    el.querySelector('.label').textContent = waypoint.label;
-
-    const marker = new mapboxgl.Marker({ element: el, anchor: 'left', offset: [4, 0] })
-      .setLngLat([waypoint.coord[1], waypoint.coord[0]])
-      .setPopup(new mapboxgl.Popup({ offset: 10, maxWidth: '280px' }).setHTML(buildWaypointPopup(waypoint)))
-      .addTo(this.map);
-
-    this.extendBounds(waypoint.coord);
-
-    const feature = {
-      setState: (state) => {
-        el.classList.remove('is-active', 'is-dim');
-        if (state === 'active') {
-          el.classList.add('is-active');
-        } else if (state === 'dim') {
-          el.classList.add('is-dim');
-        }
-      },
-      cleanup: () => marker.remove(),
-    };
-
-    this.registerFeature(stepIds, feature);
-  }
-
-  addRoute(stepIds, route) {
-    const sourceId = `route-src-${this.sourceCounter}`;
-    const layerId = `route-lyr-${this.sourceCounter}`;
-    this.sourceCounter += 1;
-
-    const coordinates = route.coords.map((coord) => [coord[1], coord[0]]);
-
-    this.map.addSource(sourceId, {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: {
-          type: 'LineString',
-          coordinates,
-        },
-      },
-    });
-
-    const paint = {
-      'line-color': route.color,
-      'line-width': route.dashed ? 4 : 4.5,
-      'line-opacity': 0.82,
-    };
-
-    if (route.dashed) {
-      paint['line-dasharray'] = [2, 1.4];
-    }
-
-    this.map.addLayer({
-      id: layerId,
-      type: 'line',
-      source: sourceId,
-      paint,
-      layout: {
-        'line-cap': 'round',
-        'line-join': 'round',
-      },
-    });
-
-    this.map.on('click', layerId, (evt) => {
-      if (!evt.lngLat) return;
-      new mapboxgl.Popup({ maxWidth: '300px' }).setLngLat(evt.lngLat).setHTML(buildRoutePopup(route)).addTo(this.map);
-    });
-
-    this.map.on('mouseenter', layerId, () => {
-      this.map.getCanvas().style.cursor = 'pointer';
-    });
-
-    this.map.on('mouseleave', layerId, () => {
-      this.map.getCanvas().style.cursor = '';
-    });
-
-    for (const coord of route.coords) this.extendBounds(coord);
-
-    const feature = {
-      setState: (state) => {
-        if (state === 'active') {
-          this.map.setPaintProperty(layerId, 'line-opacity', 1);
-          this.map.setPaintProperty(layerId, 'line-width', route.dashed ? 6 : 6.5);
-        } else if (state === 'dim') {
-          this.map.setPaintProperty(layerId, 'line-opacity', 0.18);
-          this.map.setPaintProperty(layerId, 'line-width', route.dashed ? 3 : 3.5);
-        } else {
-          this.map.setPaintProperty(layerId, 'line-opacity', 0.82);
-          this.map.setPaintProperty(layerId, 'line-width', route.dashed ? 4 : 4.5);
-        }
-      },
-      cleanup: () => {
-        if (this.map.getLayer(layerId)) this.map.removeLayer(layerId);
-        if (this.map.getSource(sourceId)) this.map.removeSource(sourceId);
-      },
-    };
-
-    this.registerFeature(stepIds, feature);
-  }
-
-  addZone(stepIds, zone) {
-    const sourceId = `zone-src-${this.sourceCounter}`;
-    const fillLayerId = `zone-fill-${this.sourceCounter}`;
-    const lineLayerId = `zone-line-${this.sourceCounter}`;
-    this.sourceCounter += 1;
-
-    const coordinates = closeRing(zone.coords.map((coord) => [coord[1], coord[0]]));
-
-    this.map.addSource(sourceId, {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [coordinates],
-        },
-      },
-    });
-
-    this.map.addLayer({
-      id: fillLayerId,
-      type: 'fill',
-      source: sourceId,
-      paint: {
-        'fill-color': zone.color,
-        'fill-opacity': 0.2,
-      },
-    });
-
-    this.map.addLayer({
-      id: lineLayerId,
-      type: 'line',
-      source: sourceId,
-      paint: {
-        'line-color': zone.color,
-        'line-opacity': 0.85,
-        'line-width': 1.5,
-      },
-    });
-
-    this.map.on('click', fillLayerId, (evt) => {
-      if (!evt.lngLat) return;
-      new mapboxgl.Popup({ maxWidth: '320px' }).setLngLat(evt.lngLat).setHTML(buildZonePopup(zone)).addTo(this.map);
-    });
-
-    this.map.on('mouseenter', fillLayerId, () => {
-      this.map.getCanvas().style.cursor = 'pointer';
-    });
-
-    this.map.on('mouseleave', fillLayerId, () => {
-      this.map.getCanvas().style.cursor = '';
-    });
-
-    for (const coord of zone.coords) this.extendBounds(coord);
-
-    const feature = {
-      setState: (state) => {
-        if (state === 'active') {
-          this.map.setPaintProperty(fillLayerId, 'fill-opacity', 0.34);
-          this.map.setPaintProperty(lineLayerId, 'line-opacity', 1);
-          this.map.setPaintProperty(lineLayerId, 'line-width', 2.5);
-        } else if (state === 'dim') {
-          this.map.setPaintProperty(fillLayerId, 'fill-opacity', 0.06);
-          this.map.setPaintProperty(lineLayerId, 'line-opacity', 0.26);
-          this.map.setPaintProperty(lineLayerId, 'line-width', 1);
-        } else {
-          this.map.setPaintProperty(fillLayerId, 'fill-opacity', 0.2);
-          this.map.setPaintProperty(lineLayerId, 'line-opacity', 0.85);
-          this.map.setPaintProperty(lineLayerId, 'line-width', 1.5);
-        }
-      },
-      cleanup: () => {
-        if (this.map.getLayer(fillLayerId)) this.map.removeLayer(fillLayerId);
-        if (this.map.getLayer(lineLayerId)) this.map.removeLayer(lineLayerId);
-        if (this.map.getSource(sourceId)) this.map.removeSource(sourceId);
-      },
-    };
-
-    this.registerFeature(stepIds, feature);
-  }
-
-  setActiveStep(stepId) {
-    const active = new Set(this.featuresByStep.get(stepId) || []);
-    const hasActive = active.size > 0;
-
-    for (const feature of this.featureRegistry) {
-      feature.setState(hasActive ? 'dim' : 'default');
-    }
-    for (const feature of active) {
-      feature.setState('active');
-    }
-  }
-
-  fitToData() {
-    if (!this.bounds.isEmpty()) {
-      this.map.fitBounds(this.bounds, {
-        padding: 70,
-        duration: 0,
-      });
     }
   }
 }
@@ -1832,17 +1531,10 @@ function readEditorPatch() {
   return parsed;
 }
 
-async function geocodeStop(stop, useMapbox) {
+async function geocodeStop(stop) {
   const embeddedCoord = normalizeCoord(stop.coord);
   if (embeddedCoord) {
     return { coord: embeddedCoord, source: 'Provided coordinate' };
-  }
-
-  if (useMapbox && stop.address) {
-    const mapboxCoord = await geocodeWithMapbox(stop.address);
-    if (mapboxCoord) {
-      return { coord: mapboxCoord, source: 'Mapbox Geocoding API' };
-    }
   }
 
   if (stop.address) {
@@ -1861,26 +1553,6 @@ async function geocodeStop(stop, useMapbox) {
   }
 
   return null;
-}
-
-async function geocodeWithMapbox(address) {
-  if (!MAPBOX_TOKEN) return null;
-
-  const endpoint = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-    address,
-  )}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=address,poi`;
-
-  try {
-    const response = await fetch(endpoint);
-    if (!response.ok) return null;
-    const json = await response.json();
-    const feature = json.features?.[0];
-    if (!feature?.center || feature.center.length < 2) return null;
-    const [lng, lat] = feature.center;
-    return normalizeCoord([lat, lng]);
-  } catch {
-    return null;
-  }
 }
 
 async function geocodeWithNominatim(address) {
@@ -1906,22 +1578,8 @@ async function geocodeWithNominatim(address) {
 }
 
 async function createRenderer() {
-  if (!MAPBOX_TOKEN) {
-    setEngineBadge('Map engine: Leaflet + OpenStreetMap (MAPBOX_TOKEN not set)');
-    return new LeafletRenderer('map');
-  }
-
-  const renderer = new MapboxRenderer('map', MAPBOX_TOKEN);
-
-  try {
-    await renderer.whenReady();
-    setEngineBadge('Map engine: Mapbox GL JS');
-    return renderer;
-  } catch {
-    renderer.destroy();
-    setEngineBadge('Map engine: Leaflet + OpenStreetMap (Mapbox failed, fallback used)');
-    return new LeafletRenderer('map');
-  }
+  setEngineBadge('Map engine: Leaflet + OpenStreetMap');
+  return new LeafletRenderer('map');
 }
 
 function setControlsDisabled(disabled) {
@@ -1959,7 +1617,7 @@ async function renderMap(config) {
 
   for (const stop of config.stops) {
     if (stop.hidden) continue;
-    const result = await geocodeStop(stop, renderer.mode === 'mapbox');
+    const result = await geocodeStop(stop);
     if (nonce !== renderNonce) {
       renderer.destroy();
       return;

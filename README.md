@@ -20,16 +20,19 @@ npm start
 
 Open the local URL printed by Vite (usually `http://localhost:5173`).
 
-## Optional Mapbox
+## Favicon
 
-Mapbox GL JS is used when `MAPBOX_TOKEN` is set; otherwise the app falls back to Leaflet + OpenStreetMap tiles.
+Global EBG favicon files are included at project root and in `public/`:
+- `favicon.ico`
+- `favicon.svg`
 
-```bash
-export MAPBOX_TOKEN=your_token_here
-npm start
+HTML head snippet used:
+
+```html
+<link rel="icon" type="image/x-icon" href="./favicon.ico" />
+<link rel="icon" type="image/svg+xml" sizes="any" href="./favicon.svg" />
+<link rel="shortcut icon" href="./favicon.ico" />
 ```
-
-If Mapbox fails to initialize, the app automatically falls back to Leaflet.
 
 ## Export PNG
 
@@ -61,5 +64,5 @@ npm run build
 
 ## Coordinate sources
 
-- Primary: runtime geocoding via Mapbox Geocoding API (if token present) or Nominatim (OpenStreetMap)
+- Primary: runtime geocoding via Nominatim (OpenStreetMap)
 - Fallback coordinates in code are from Nominatim lookups on 2026-02-13.
