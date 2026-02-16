@@ -54,8 +54,10 @@ test('Saturday resolves to Roosevelt Island actuals in map config', async () => 
     const stepTitles = config.steps.map((step) => step.title);
     const stopNames = config.stops.map((stop) => stop.name);
 
+    assert.ok(stepTitles.includes('Walk to Roosevelt Island Tramway from hotel'));
     assert.ok(stepTitles.includes('Roosevelt Island via Tram'));
     assert.ok(stopNames.includes('Frank'));
+    assert.ok(config.routes.some((route) => /Walk: Hotel -> Tramway/.test(route.name)));
 
     const stopIds = config.stops.map((stop) => stop.id);
     assert.ok(stopIds.length < config.steps.length + 2, 'Expected stop dedupe across repeated locations');

@@ -55,6 +55,7 @@ test('saturday includes Roosevelt Island actuals and Frank dinner', () => {
   assert.ok(saturday, 'Missing Saturday day');
 
   const titles = saturday.items.map((item) => item.title);
+  assert.ok(titles.includes('Walk to Roosevelt Island Tramway from hotel'));
   assert.ok(titles.includes('Roosevelt Island via Tram'));
   assert.ok(titles.includes('Late dinner'));
 

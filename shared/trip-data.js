@@ -318,6 +318,7 @@ function lastStopId(step) {
 }
 
 function buildSaturdayCuratedRoutes(stepStops) {
+  const walkToTramStep = findStepByTitle(stepStops, /walk to roosevelt island tramway from hotel|walk.*tramway/);
   const tramStep = findStepByTitle(stepStops, /roosevelt island via tram/);
   const faoStep = findStepByTitle(stepStops, /jellycat stop|fao schwarz/);
   const wineStep = findStepByTitle(stepStops, /aldo sohm|midtown wine bar/);
@@ -327,6 +328,28 @@ function buildSaturdayCuratedRoutes(stepStops) {
   const dinnerStep = findStepByTitle(stepStops, /late dinner|frank/);
 
   const routes = [];
+
+  if (walkToTramStep && firstStopId(walkToTramStep) && lastStopId(walkToTramStep)) {
+    routes.push(
+      makeRoute({
+        id: 'saturday-curated-hotel-to-tramway-walk',
+        name: 'Walk: Hotel -> Tramway',
+        time: walkToTramStep.time,
+        note: 'Walked from Thompson Central Park to Tramway Plaza.',
+        stepId: walkToTramStep.stepId,
+        color: walkToTramStep.color,
+        dashed: false,
+        fromStopId: firstStopId(walkToTramStep),
+        toStopId: lastStopId(walkToTramStep),
+        coords: [
+          [40.7643285, -73.978572],
+          [40.7632, -73.9749],
+          [40.7621, -73.9707],
+          [40.761558, -73.964783],
+        ],
+      }),
+    );
+  }
 
   if (tramStep && firstStopId(tramStep) && lastStopId(tramStep)) {
     routes.push(

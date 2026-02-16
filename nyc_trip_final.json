@@ -190,6 +190,25 @@
       "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
       "items": [
         {
+          "start_time": "14:20",
+          "end_time": "14:45",
+          "title": "Walk to Roosevelt Island Tramway from hotel",
+          "type": "walk",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
+            },
+            {
+              "name": "Roosevelt Island Tramway (Manhattan Tramway Plaza)",
+              "address": "E 59th St & 2nd Ave, New York, NY 10022"
+            }
+          ],
+          "notes": "Walked from hotel to the tramway plaza before boarding.",
+          "status": "completed",
+          "completed_at": "2026-02-14T14:44:00-05:00"
+        },
+        {
           "start_time": "14:45",
           "end_time": "16:15",
           "title": "Roosevelt Island via Tram",
@@ -205,7 +224,7 @@
               "address": "Roosevelt Island, New York, NY 10044"
             }
           ],
-          "notes": "Completed via Roosevelt Island Tram; scenic walk on Roosevelt Island completed as planned.",
+          "notes": "Completed via Roosevelt Island Tram after walking from the hotel to Tramway Plaza; scenic walk on Roosevelt Island completed as planned.",
           "status": "completed",
           "completed_at": "2026-02-14T16:12:00-05:00"
         },
