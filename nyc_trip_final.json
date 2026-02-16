@@ -305,9 +305,27 @@
     },
     {
       "date": "2026-02-15",
-      "title": "Sunday actuals: Vineapple -> Bridge -> LES/SoHo -> Pastis -> Chelsea -> Hotel",
+      "title": "Sunday actuals: Subway -> Vineapple -> Bridge -> LES/SoHo -> Pastis -> Chelsea -> Summer House -> Hotel",
       "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
       "items": [
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Subway: Thompson Central Park -> Vineapple",
+          "type": "transit",
+          "notes": "time approximate",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
+            },
+            {
+              "name": "Vineapple",
+              "address": "71 Pineapple St, Brooklyn, NY 11201"
+            }
+          ]
+        },
         {
           "start_time": null,
           "end_time": null,
@@ -384,6 +402,20 @@
           "title": "Walked to Nathaniel + Lindsay's apartment",
           "type": "walk",
           "notes": "time unknown",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Nathaniel + Lindsay's apartment",
+              "address": "515 W 23rd St, New York, NY 10011"
+            }
+          ]
+        },
+        {
+          "start_time": "20:00",
+          "end_time": "21:00",
+          "title": "Watch Summer House at Nathaniel + Lindsay's apartment",
+          "type": "event",
+          "notes": "Watched Summer House together.",
           "status": "completed",
           "locations": [
             {

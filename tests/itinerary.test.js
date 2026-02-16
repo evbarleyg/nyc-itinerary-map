@@ -69,12 +69,14 @@ test('sunday includes completed actuals sequence', () => {
 
   assert.match(sunday.title, /Sunday actuals/i);
   const titles = sunday.items.map((item) => item.title);
+  assert.ok(titles.includes('Subway: Thompson Central Park -> Vineapple'));
   assert.ok(titles.includes('Brunch at Vineapple'));
   assert.ok(titles.includes('Walk Brooklyn Heights Promenade to Brooklyn Bridge'));
   assert.ok(titles.includes('Walk across Brooklyn Bridge to Forgetmenot'));
   assert.ok(titles.includes('Lure Fishbar for oysters'));
   assert.ok(titles.includes('Joined the girls at Pastis'));
   assert.ok(titles.includes("Walked to Nathaniel + Lindsay's apartment"));
+  assert.ok(titles.includes("Watch Summer House at Nathaniel + Lindsay's apartment"));
   assert.ok(titles.includes('Ubered back to hotel'));
   assert.ok(sunday.items.every((item) => item.status === 'completed'));
 });

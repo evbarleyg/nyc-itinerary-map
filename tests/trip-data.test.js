@@ -74,6 +74,8 @@ test('Sunday completed actuals are retained with ordered map routing', async () 
     assert.ok(sunday, 'Missing Sunday day');
 
     assert.ok(sunday.items.every((item) => item.status === 'completed'));
+    assert.ok(sunday.items.some((item) => item.title === 'Subway: Thompson Central Park -> Vineapple'));
+    assert.ok(sunday.items.some((item) => item.title === "Watch Summer House at Nathaniel + Lindsay's apartment"));
 
     const dinner = sunday.items.find((item) => item.title === 'Joined the girls at Pastis');
     assert.ok(dinner, 'Missing Pastis meetup item');
@@ -85,11 +87,14 @@ test('Sunday completed actuals are retained with ordered map routing', async () 
     assert.ok(
       config.routes.some((route) => /Brunch at Vineapple -> Walk Brooklyn Heights Promenade to Brooklyn Bridge/.test(route.name)),
     );
+    assert.ok(config.routes.some((route) => /Subway: Thompson Central Park -> Vineapple/.test(route.name)));
     assert.ok(
       config.routes.some((route) => /Joined the girls at Pastis -> Walked to Nathaniel \+ Lindsay's apartment/.test(route.name)),
     );
     assert.ok(
-      config.routes.some((route) => /Walked to Nathaniel \+ Lindsay's apartment -> Ubered back to hotel/.test(route.name)),
+      config.routes.some(
+        (route) => /Watch Summer House at Nathaniel \+ Lindsay's apartment -> Ubered back to hotel/.test(route.name),
+      ),
     );
   });
 });
