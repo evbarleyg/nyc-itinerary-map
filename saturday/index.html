@@ -31,6 +31,25 @@
         color: var(--text);
       }
 
+      .skip-link {
+        position: absolute;
+        left: 12px;
+        top: -40px;
+        z-index: 1200;
+        background: #1a4156;
+        color: #f2fbff;
+        padding: 8px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .skip-link:focus-visible {
+        top: 10px;
+        outline: 3px solid #93cbef;
+        outline-offset: 2px;
+      }
+
       .wrap {
         max-width: 860px;
         margin: 0 auto;
@@ -242,6 +261,7 @@
         border: none;
         border-radius: 10px;
         padding: 10px 12px;
+        min-height: 40px;
         font-size: 0.88rem;
         font-weight: 700;
         cursor: pointer;
@@ -291,6 +311,9 @@
         font-size: 0.8rem;
         font-weight: 700;
         padding: 6px 10px;
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
         white-space: nowrap;
       }
 
@@ -310,6 +333,7 @@
         border: none;
         border-radius: 10px;
         padding: 9px 11px;
+        min-height: 36px;
         background: #2f6f8f;
         color: #f5fbff;
         font-size: 0.84rem;
@@ -325,6 +349,14 @@
         line-height: 1.35;
       }
 
+      .day-tab:focus-visible,
+      .upload-btn:focus-visible,
+      .btn:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #86bde2;
+        outline-offset: 2px;
+      }
+
       @media (min-width: 760px) {
         .chips {
           grid-template-columns: repeat(3, 1fr);
@@ -334,10 +366,22 @@
           grid-template-columns: repeat(2, 1fr);
         }
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
     </style>
   </head>
   <body>
-    <main class="wrap">
+    <a class="skip-link" href="#saturday-content">Skip to guide content</a>
+    <main id="saturday-content" class="wrap">
       <section class="day-history" aria-label="Day history">
         <div class="day-tabs-wrap">
           <nav id="day-tabs" class="day-tabs" aria-label="Day tabs"></nav>
@@ -351,8 +395,10 @@
             hidden
           />
         </div>
-        <p id="day-status" class="day-status">Upload GPX/KML/GeoJSON from Files to add a day tab.</p>
-        <p id="view-on-map-wrap" class="day-status"></p>
+        <p id="day-status" class="day-status" role="status" aria-live="polite" aria-atomic="true">
+          Upload GPX/KML/GeoJSON from Files to add a day tab.
+        </p>
+        <p id="view-on-map-wrap" class="day-status" aria-live="polite"></p>
       </section>
 
       <section class="top">
@@ -541,7 +587,9 @@
             <a id="all-stops-link" class="btn btn-primary" href="https://www.google.com/maps/dir/?api=1&origin=Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019&destination=Frank,+88+2nd+Ave,+New+York,+NY+10003&waypoints=Brooklyn+Bridge+Pedestrian+Walkway+Entrance+near+City+Hall,+New+York,+NY|Pier+11+Wall+St,+11+South+St,+New+York,+NY+10004|The+Ten+Bells,+247+Broome+St,+New+York,+NY+10002|Thompson+Central+Park+New+York,+119+W+56th+St,+New+York,+NY+10019|New+York+Comedy+Club+Midtown,+241+E+24th+St,+New+York,+NY+10010&travelmode=transit" target="_blank" rel="noopener noreferrer">Open all stops in Google Maps</a>
             <button class="btn" id="copy-link-btn" type="button">Copy link</button>
           </div>
-          <p class="small" id="copy-status">Copy this to share with friends.</p>
+          <p class="small" id="copy-status" role="status" aria-live="polite" aria-atomic="true">
+            Copy this to share with friends.
+          </p>
         </article>
 
         <article class="card">
@@ -621,7 +669,10 @@
           for (const day of days) {
             const link = document.createElement("a");
             link.className = "day-tab";
-            if (day.id === activeId) link.classList.add("active");
+            if (day.id === activeId) {
+              link.classList.add("active");
+              link.setAttribute("aria-current", "page");
+            }
             link.textContent = day.title;
             link.href = getDayHref(day);
 

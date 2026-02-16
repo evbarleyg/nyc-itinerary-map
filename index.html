@@ -9,6 +9,7 @@
     <title>NYC Itinerary Map</title>
   </head>
   <body>
+    <a class="skip-link" href="#map-shell">Skip to map content</a>
     <header id="day-history-bar" class="day-history-bar" aria-label="Day history">
       <div class="day-history-tabs-wrap">
         <nav id="day-tabs" class="day-tabs" aria-label="Day tabs"></nav>
@@ -21,7 +22,7 @@
           accept=".gpx,.kml,.geojson,.json,application/gpx+xml,application/vnd.google-earth.kml+xml,application/geo+json,application/json"
           hidden
         />
-        <span id="day-history-status" class="day-history-status">
+        <span id="day-history-status" class="day-history-status" role="status" aria-live="polite" aria-atomic="true">
           Upload a GPX/KML/GeoJSON path from Files to add a day tab.
         </span>
       </div>
@@ -72,13 +73,13 @@
             Open in Google Maps
           </a>
           <button id="download-btn" type="button">Download Map (PNG)</button>
-          <p id="status" class="status">Loading map...</p>
+          <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true">Loading map...</p>
         </div>
       </aside>
 
       <main id="map-shell">
-        <div id="map" aria-label="NYC itinerary map"></div>
-        <section id="legend" aria-label="Route legend"></section>
+        <div id="map" role="region" aria-label="NYC itinerary map"></div>
+        <section id="legend" role="region" aria-label="Route legend"></section>
       </main>
     </div>
 

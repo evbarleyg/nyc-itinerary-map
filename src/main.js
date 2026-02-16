@@ -1,6 +1,5 @@
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import html2canvas from 'html2canvas';
 import {
   FINAL_GOOGLE_MAPS_URL,
   FINALIZED_ITINERARY_PATCH,
@@ -28,6 +27,7 @@ const STORAGE_KEY = 'nyc-itinerary-update-patch-v2';
 const FULL_DAY_VIEW_STORAGE_KEY = 'nyc-itinerary-full-day-view-v1';
 const UPLOADED_PATH_COLOR = '#8c3f13';
 const APP_BASE_URL = ensureTrailingSlash(import.meta.env.BASE_URL || '/');
+let html2canvasLoaderPromise;
 
 const DEFAULT_ITINERARY = {
   weatherNote:
@@ -1119,7 +1119,15 @@ function escapeHtml(value) {
 
 function setStatus(message) {
   const status = document.getElementById('status');
+  if (!status) return;
   status.textContent = message;
+}
+
+async function getHtml2Canvas() {
+  if (!html2canvasLoaderPromise) {
+    html2canvasLoaderPromise = import('html2canvas').then((module) => module.default);
+  }
+  return html2canvasLoaderPromise;
 }
 
 function getStoredFullDayPathPreference() {
@@ -1655,6 +1663,8 @@ function renderItineraryList(steps, onSelect, completedView) {
     button.className = 'itinerary-item';
     if (completedView) button.classList.add('completed');
     button.dataset.stepId = step.id;
+    button.setAttribute('aria-pressed', 'false');
+    button.setAttribute('aria-label', `${step.time || 'Time TBD'} - ${step.title || step.id}`);
     button.style.setProperty('--item-color', step.color || '#667281');
     button.innerHTML = `
       <span class="time">${escapeHtml(step.time || '')}</span>
@@ -1674,7 +1684,9 @@ function renderItineraryList(steps, onSelect, completedView) {
 function setActiveListItem(stepId) {
   const buttons = document.querySelectorAll('.itinerary-item');
   for (const button of buttons) {
-    button.classList.toggle('active', button.dataset.stepId === stepId);
+    const isActive = button.dataset.stepId === stepId;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   }
 }
 
@@ -1979,6 +1991,7 @@ async function exportMapImage() {
   setStatus('Rendering PNG...');
 
   try {
+    const html2canvas = await getHtml2Canvas();
     const shell = document.getElementById('map-shell');
     const canvas = await html2canvas(shell, {
       useCORS: true,
