@@ -1751,13 +1751,7 @@ async function geocodeStop(stop) {
     return { coord: embeddedCoord, source: 'Provided coordinate' };
   }
 
-  if (stop.address) {
-    const nominatimCoord = await geocodeWithNominatim(stop.address);
-    if (nominatimCoord) {
-      return { coord: nominatimCoord, source: 'Nominatim (OpenStreetMap)' };
-    }
-  }
-
+  // Prefer local fallback points before network geocoding for faster loads.
   const fallback = normalizeCoord(stop.fallback);
   if (fallback) {
     return {
@@ -1766,10 +1760,24 @@ async function geocodeStop(stop) {
     };
   }
 
+  if (stop.address) {
+    const nominatimCoord = await geocodeWithNominatim(stop.address);
+    if (nominatimCoord) {
+      return { coord: nominatimCoord, source: 'Nominatim (OpenStreetMap)' };
+    }
+  }
+
   return null;
 }
 
+const nominatimCache = new Map();
+
 async function geocodeWithNominatim(address) {
+  const cacheKey = address.trim().toLowerCase();
+  if (nominatimCache.has(cacheKey)) {
+    return nominatimCache.get(cacheKey);
+  }
+
   const endpoint = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(
     address,
   )}`;
@@ -1781,12 +1789,21 @@ async function geocodeWithNominatim(address) {
       },
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      nominatimCache.set(cacheKey, null);
+      return null;
+    }
     const json = await response.json();
-    if (!Array.isArray(json) || json.length === 0) return null;
+    if (!Array.isArray(json) || json.length === 0) {
+      nominatimCache.set(cacheKey, null);
+      return null;
+    }
 
-    return normalizeCoord([json[0].lat, json[0].lon]);
+    const coord = normalizeCoord([json[0].lat, json[0].lon]);
+    nominatimCache.set(cacheKey, coord);
+    return coord;
   } catch {
+    nominatimCache.set(cacheKey, null);
     return null;
   }
 }
