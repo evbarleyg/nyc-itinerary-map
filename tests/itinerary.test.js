@@ -63,17 +63,20 @@ test('saturday includes Roosevelt Island actuals and Frank dinner', () => {
   assert.match(frankAddress, /88 2nd Ave, New York, NY 10003/);
 });
 
-test('sunday includes bridge, chelsea, and pastis flow', () => {
+test('sunday includes completed actuals sequence', () => {
   const sunday = tripData.days.find((day) => day.date === '2026-02-15');
   assert.ok(sunday, 'Missing Sunday day');
 
+  assert.match(sunday.title, /Sunday actuals/i);
   const titles = sunday.items.map((item) => item.title);
-  assert.ok(titles.includes('Subway to Brooklyn Bridge–City Hall'));
-  assert.ok(titles.includes('Walk Brooklyn Bridge (Manhattan → Brooklyn)'));
-  assert.ok(titles.includes('Brunch'));
-  assert.ok(titles.includes('Transit to Chelsea'));
-  assert.ok(titles.includes('Meet Nathaniel'));
-  assert.ok(titles.includes('Meet Lindsay and Maci'));
+  assert.ok(titles.includes('Brunch at Vineapple'));
+  assert.ok(titles.includes('Walk Brooklyn Heights Promenade to Brooklyn Bridge'));
+  assert.ok(titles.includes('Walk across Brooklyn Bridge to Forgetmenot'));
+  assert.ok(titles.includes('Lure Fishbar for oysters'));
+  assert.ok(titles.includes('Joined the girls at Pastis'));
+  assert.ok(titles.includes("Walked to Nathaniel + Lindsay's apartment"));
+  assert.ok(titles.includes('Ubered back to hotel'));
+  assert.ok(sunday.items.every((item) => item.status === 'completed'));
 });
 
 test('root page includes full-day path toggle control', () => {

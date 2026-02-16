@@ -67,28 +67,29 @@ test('Saturday resolves to Roosevelt Island actuals in map config', async () => 
   });
 });
 
-test('Sunday bridge/chelsea/pastis plan is retained with curated routing', async () => {
+test('Sunday completed actuals are retained with ordered map routing', async () => {
   await withMockedFetch(async () => {
     const trip = await loadTripData();
     const sunday = getDayById(trip, 'sunday');
     assert.ok(sunday, 'Missing Sunday day');
 
-    const tentativeTwoPm = sunday.items.filter((item) => item.start_time === '14:00');
-    assert.equal(tentativeTwoPm.length, 1);
-    assert.equal(tentativeTwoPm[0]?.title, 'Meet Nathaniel');
-    assert.ok(sunday.items.every((item) => item.status === 'tentative'));
+    assert.ok(sunday.items.every((item) => item.status === 'completed'));
 
-    const dinner = sunday.items.find((item) => item.title === 'Meet Lindsay and Maci');
+    const dinner = sunday.items.find((item) => item.title === 'Joined the girls at Pastis');
     assert.ok(dinner, 'Missing Pastis meetup item');
-    assert.equal(dinner.end_time, null);
     assert.equal(dinner.locations?.[0]?.address, '52 Gansevoort St, New York, NY 10014');
 
     const config = buildMapConfigFromDay(sunday, trip);
     const stepMeta = config.steps.map((step) => step.meta).join(' | ');
-    assert.match(stepMeta, /Tentative/);
-    assert.ok(config.routes.some((route) => /Walk: Brooklyn Bridge \(to Brooklyn\)/.test(route.name)));
-    assert.ok(config.routes.some((route) => /Walk: Brooklyn Bridge \(back to Manhattan\)/.test(route.name)));
-    assert.ok(config.routes.some((route) => /Transfer: Brooklyn Bridge -> Chelsea/.test(route.name)));
-    assert.ok(config.routes.some((route) => /Transfer: Chelsea -> Pastis dinner/.test(route.name)));
+    assert.match(stepMeta, /Completed/);
+    assert.ok(
+      config.routes.some((route) => /Brunch at Vineapple -> Walk Brooklyn Heights Promenade to Brooklyn Bridge/.test(route.name)),
+    );
+    assert.ok(
+      config.routes.some((route) => /Joined the girls at Pastis -> Walked to Nathaniel \+ Lindsay's apartment/.test(route.name)),
+    );
+    assert.ok(
+      config.routes.some((route) => /Walked to Nathaniel \+ Lindsay's apartment -> Ubered back to hotel/.test(route.name)),
+    );
   });
 });

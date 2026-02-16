@@ -624,7 +624,11 @@ function buildSundayCuratedRoutes(stepStops) {
 
 function getCuratedRoutes(dayDate, stepStops) {
   if (dayDate === '2026-02-14') return buildSaturdayCuratedRoutes(stepStops);
-  if (dayDate === '2026-02-15') return buildSundayCuratedRoutes(stepStops);
+  if (dayDate === '2026-02-15') {
+    const sundayCurated = buildSundayCuratedRoutes(stepStops);
+    // Fallback to generic sequencing when Sunday titles diverge from curated assumptions.
+    return sundayCurated.length >= 3 ? sundayCurated : [];
+  }
   return [];
 }
 

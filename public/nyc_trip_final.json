@@ -305,48 +305,16 @@
     },
     {
       "date": "2026-02-15",
-      "title": "Sunday tentative: Bridge + Vineapple + Chelsea + Pastis",
+      "title": "Sunday actuals: Vineapple -> Bridge -> LES/SoHo -> Pastis -> Chelsea -> Hotel",
       "base_location": "Thompson Central Park New York, 119 W 56th St, New York, NY 10019",
       "items": [
         {
-          "start_time": "09:45",
-          "end_time": "10:10",
-          "title": "Subway to Brooklyn Bridge–City Hall",
-          "type": "transit",
-          "notes": "Take 4/5 downtown from 59th St.",
-          "status": "tentative",
-          "locations": [
-            {
-              "name": "Brooklyn Bridge-City Hall Station",
-              "address": "Brooklyn Bridge-City Hall Station, New York, NY 10007"
-            }
-          ]
-        },
-        {
-          "start_time": "10:10",
-          "end_time": "10:50",
-          "title": "Walk Brooklyn Bridge (Manhattan → Brooklyn)",
-          "type": "sightseeing",
-          "notes": "",
-          "status": "tentative",
-          "locations": [
-            {
-              "name": "Brooklyn Bridge Pedestrian Entrance (Manhattan side)",
-              "address": "Brooklyn Bridge Pedestrian Walkway Entrance near City Hall, New York, NY"
-            },
-            {
-              "name": "Brooklyn Bridge Park (DUMBO side)",
-              "address": "334 Furman St, Brooklyn, NY 11201"
-            }
-          ]
-        },
-        {
-          "start_time": "11:00",
-          "end_time": "12:15",
-          "title": "Brunch",
+          "start_time": null,
+          "end_time": null,
+          "title": "Brunch at Vineapple",
           "type": "dining",
-          "notes": "",
-          "status": "tentative",
+          "notes": "time unknown",
+          "status": "completed",
           "locations": [
             {
               "name": "Vineapple",
@@ -355,62 +323,86 @@
           ]
         },
         {
-          "start_time": "12:15",
-          "end_time": "12:45",
-          "title": "Walk Brooklyn Bridge (Brooklyn → Manhattan)",
-          "type": "sightseeing",
-          "notes": "",
-          "status": "tentative",
-          "locations": [
-            {
-              "name": "Brooklyn Bridge Park (DUMBO side)",
-              "address": "334 Furman St, Brooklyn, NY 11201"
-            },
-            {
-              "name": "Brooklyn Bridge Pedestrian Entrance (Manhattan side)",
-              "address": "Brooklyn Bridge Pedestrian Walkway Entrance near City Hall, New York, NY"
-            }
-          ]
-        },
-        {
-          "start_time": "13:15",
-          "end_time": "14:00",
-          "title": "Transit to Chelsea",
-          "type": "transit",
-          "notes": "Take C train to 23rd St, walk west to 515 W 23rd St.",
-          "status": "tentative",
-          "locations": [
-            {
-              "name": "West Chelsea",
-              "address": "515 W 23rd St, New York, NY 10011"
-            }
-          ]
-        },
-        {
-          "start_time": "14:00",
-          "end_time": "17:00",
-          "title": "Meet Nathaniel",
-          "type": "social",
-          "notes": "",
-          "status": "tentative",
-          "locations": [
-            {
-              "name": "West Chelsea",
-              "address": "515 W 23rd St, New York, NY 10011"
-            }
-          ]
-        },
-        {
-          "start_time": "17:15",
+          "start_time": null,
           "end_time": null,
-          "title": "Meet Lindsay and Maci",
+          "title": "Walk Brooklyn Heights Promenade to Brooklyn Bridge",
+          "type": "sightseeing",
+          "notes": "time approximate",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Brooklyn Heights Promenade",
+              "address": "Pierrepont Pl, Brooklyn, NY 11201"
+            }
+          ]
+        },
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Walk across Brooklyn Bridge to Forgetmenot",
+          "type": "sightseeing",
+          "notes": "time approximate",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Forgetmenot",
+              "address": "138 Division St, New York, NY 10002"
+            }
+          ]
+        },
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Lure Fishbar for oysters",
           "type": "dining",
-          "notes": "",
-          "status": "tentative",
+          "notes": "time unknown",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Lure Fishbar",
+              "address": "142 Mercer St, New York, NY 10012"
+            }
+          ]
+        },
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Joined the girls at Pastis",
+          "type": "dining",
+          "notes": "time unknown",
+          "status": "completed",
           "locations": [
             {
               "name": "Pastis",
               "address": "52 Gansevoort St, New York, NY 10014"
+            }
+          ]
+        },
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Walked to Nathaniel + Lindsay's apartment",
+          "type": "walk",
+          "notes": "time unknown",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Nathaniel + Lindsay's apartment",
+              "address": "515 W 23rd St, New York, NY 10011"
+            }
+          ]
+        },
+        {
+          "start_time": null,
+          "end_time": null,
+          "title": "Ubered back to hotel",
+          "type": "transit",
+          "notes": "time unknown",
+          "status": "completed",
+          "locations": [
+            {
+              "name": "Thompson Central Park New York",
+              "address": "119 W 56th St, New York, NY 10019"
             }
           ]
         }
