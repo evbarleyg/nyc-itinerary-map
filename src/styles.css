@@ -477,6 +477,20 @@ body {
   border-radius: 999px;
 }
 
+.legend-chip.is-solid {
+  background: #4a6279;
+}
+
+.legend-chip.is-dashed {
+  background: repeating-linear-gradient(to right, #4a6279 0 9px, transparent 9px 14px);
+  border: 1px solid #8fa2b1;
+  height: 5px;
+}
+
+.legend-row.legend-note {
+  margin-top: 4px;
+}
+
 .leaflet-tooltip.waypoint-label {
   border: 1px solid #bfd2c8;
   background: #f3faf5;

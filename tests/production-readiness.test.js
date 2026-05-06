@@ -5,6 +5,7 @@ import fs from 'node:fs';
 const rootHtml = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const saturdayHtml = fs.readFileSync(new URL('../saturday/index.html', import.meta.url), 'utf8');
 const mainJs = fs.readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+const stylesCss = fs.readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
 const packageJson = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 const ciWorkflow = fs.readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8');
 const deployWorkflow = fs.readFileSync(new URL('../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
@@ -30,6 +31,15 @@ test('map export uses lazy html2canvas loading', () => {
   assert.match(mainJs, /html2canvasLoaderPromise/);
   assert.match(mainJs, /import\('html2canvas'\)/);
   assert.match(mainJs, /const html2canvas = await getHtml2Canvas\(\);/);
+});
+
+test('step selection focuses selected leg and legend explains solid vs dotted lines', () => {
+  assert.match(mainJs, /fitToStep\(stepId\)/);
+  assert.match(mainJs, /setFullDayPathMode\(false, false\)/);
+  assert.match(mainJs, /setStatus\('Full day path shown\.'\)/);
+  assert.match(mainJs, /Solid line: on-foot segment\./);
+  assert.match(mainJs, /Dotted line: transit\/ride transfer or uploaded phone trace\./);
+  assert.match(stylesCss, /\.legend-chip\.is-dashed/);
 });
 
 test('CI workflow enforces lint, typecheck, test, build, and dependency audit', () => {

@@ -614,6 +614,7 @@ class LeafletRenderer {
 
     this.featureRegistry = [];
     this.featuresByStep = new Map();
+    this.boundsByStep = new Map();
     this.bounds = L.latLngBounds([]);
   }
 
@@ -627,6 +628,7 @@ class LeafletRenderer {
     }
     this.featureRegistry = [];
     this.featuresByStep.clear();
+    this.boundsByStep.clear();
   }
 
   registerFeature(stepIds, feature) {
@@ -644,6 +646,21 @@ class LeafletRenderer {
     }
   }
 
+  addStepBounds(stepIds, coords) {
+    const safeCoords = Array.isArray(coords) ? coords.filter((coord) => isValidCoord(coord)) : [];
+    if (safeCoords.length === 0) return;
+
+    for (const stepId of stepIds || []) {
+      if (!this.boundsByStep.has(stepId)) {
+        this.boundsByStep.set(stepId, L.latLngBounds([]));
+      }
+      const stepBounds = this.boundsByStep.get(stepId);
+      for (const coord of safeCoords) {
+        stepBounds.extend(coord);
+      }
+    }
+  }
+
   addStop(stepIds, stop) {
     const layer = L.circleMarker(stop.coord, {
       radius: 7,
@@ -656,6 +673,7 @@ class LeafletRenderer {
 
     layer.bindPopup(buildStopPopup(stop));
     this.extendBounds(stop.coord);
+    this.addStepBounds(stepIds, [stop.coord]);
 
     const feature = {
       setState: (state) => {
@@ -694,6 +712,7 @@ class LeafletRenderer {
     layer.bindPopup(buildWaypointPopup(waypoint));
 
     this.extendBounds(waypoint.coord);
+    this.addStepBounds(stepIds, [waypoint.coord]);
 
     const feature = {
       setState: (state) => {
@@ -723,6 +742,7 @@ class LeafletRenderer {
     layer.bindPopup(buildRoutePopup(route));
 
     for (const coord of route.coords) this.extendBounds(coord);
+    this.addStepBounds(stepIds, route.coords);
 
     const feature = {
       setState: (state) => {
@@ -751,6 +771,7 @@ class LeafletRenderer {
     layer.bindPopup(buildZonePopup(zone));
 
     for (const coord of zone.coords) this.extendBounds(coord);
+    this.addStepBounds(stepIds, zone.coords);
 
     const feature = {
       setState: (state) => {
@@ -782,6 +803,14 @@ class LeafletRenderer {
   fitToData() {
     if (this.bounds.isValid()) {
       this.map.fitBounds(this.bounds.pad(0.08));
+    }
+  }
+
+  fitToStep(stepId) {
+    if (!stepId) return;
+    const stepBounds = this.boundsByStep.get(stepId);
+    if (stepBounds?.isValid()) {
+      this.map.fitBounds(stepBounds.pad(0.28));
     }
   }
 }
@@ -1645,7 +1674,12 @@ function renderLegend(steps, hasUploadedPath = false) {
 
   const styleNote = `
       <div class="legend-row">
-        <span>Solid: on-foot. Dotted: transit/ride transfer (or uploaded path).</span>
+        <span class="legend-chip is-solid"></span>
+        <span>Solid line: on-foot segment.</span>
+      </div>
+      <div class="legend-row legend-note">
+        <span class="legend-chip is-dashed"></span>
+        <span>Dotted line: transit/ride transfer or uploaded phone trace.</span>
       </div>
     `;
 
@@ -1930,6 +1964,12 @@ async function renderMap(config) {
       setFullDayPathMode(false, false);
       setActiveListItem(stepId);
       applyStepHighlightMode();
+      activeRenderer?.fitToStep(stepId);
+      const selectedStep = config.steps.find((step) => step.id === stepId);
+      const selectedLabel = selectedStep
+        ? `${selectedStep.time || 'Time TBD'} - ${selectedStep.title || stepId}`
+        : 'selected segment';
+      setStatus(`Focused on ${selectedLabel}.`);
     },
     completionInfo.completed,
   );

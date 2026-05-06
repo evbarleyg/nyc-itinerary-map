@@ -86,17 +86,10 @@ test('Sunday completed actuals are retained with ordered map routing', async () 
     const config = buildMapConfigFromDay(sunday, trip);
     const stepMeta = config.steps.map((step) => step.meta).join(' | ');
     assert.match(stepMeta, /Completed/);
-    assert.ok(
-      config.routes.some((route) => /Brunch at Vineapple -> Walk Brooklyn Heights Promenade to Brooklyn Bridge/.test(route.name)),
-    );
-    assert.ok(config.routes.some((route) => /Subway: Thompson Central Park -> Vineapple/.test(route.name)));
-    assert.ok(
-      config.routes.some((route) => /Joined the girls at Pastis -> Walked to Nathaniel \+ Lindsay's apartment/.test(route.name)),
-    );
-    assert.ok(
-      config.routes.some(
-        (route) => /Watch Summer House at Nathaniel \+ Lindsay's apartment -> Ubered back to hotel/.test(route.name),
-      ),
-    );
+    assert.ok(config.routes.some((route) => /Subway: Hotel -> Vineapple/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Brooklyn Heights Promenade -> Forgetmenot/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Lure Fishbar -> Pastis/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Pastis -> Nathaniel \+ Lindsay's apartment/.test(route.name)));
+    assert.ok(config.routes.some((route) => /Apartment -> Hotel/.test(route.name)));
   });
 });
