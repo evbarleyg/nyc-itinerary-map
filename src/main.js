@@ -2061,6 +2061,36 @@ function wireEvents() {
   document.getElementById('reset-updates-btn').addEventListener('click', resetEditorTemplate);
   wireDayHistoryUi();
   wireViewModeUi();
+  wirePanelToggle();
+}
+
+function setPanelCollapsed(collapsed) {
+  const panel = document.getElementById('itinerary-panel');
+  const button = document.getElementById('panel-toggle-btn');
+  if (!panel || !button) return;
+
+  panel.classList.toggle('is-collapsed', collapsed);
+  button.setAttribute('aria-expanded', String(!collapsed));
+  button.textContent = collapsed ? 'Show itinerary' : 'Hide itinerary';
+
+  // Leaflet caches container size; the map row height changes with the panel.
+  requestAnimationFrame(() => {
+    activeRenderer?.map?.invalidateSize?.();
+  });
+}
+
+function wirePanelToggle() {
+  const button = document.getElementById('panel-toggle-btn');
+  if (!button) return;
+
+  button.addEventListener('click', () => {
+    const panel = document.getElementById('itinerary-panel');
+    setPanelCollapsed(!panel.classList.contains('is-collapsed'));
+  });
+
+  if (window.matchMedia('(max-width: 980px)').matches) {
+    setPanelCollapsed(true);
+  }
 }
 
 function getFallbackFixedDays() {

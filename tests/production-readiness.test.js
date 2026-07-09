@@ -59,3 +59,12 @@ test('deploy workflow uses reproducible dependency install and package scripts i
   assert.equal(typeof packageJson?.scripts?.typecheck, 'string');
   assert.match(packageJson.scripts.typecheck, /node --check/);
 });
+
+test('mobile layout collapses itinerary panel and gives map full remaining height', () => {
+  assert.match(rootHtml, /id="panel-toggle-btn"[^>]*aria-expanded/);
+  assert.match(rootHtml, /aria-controls="itinerary-panel"/);
+  assert.match(mainJs, /setPanelCollapsed\(/);
+  assert.match(mainJs, /matchMedia\('\(max-width: 980px\)'\)/);
+  assert.match(stylesCss, /height: 100dvh/);
+  assert.match(stylesCss, /#itinerary-panel\.is-collapsed/);
+});
